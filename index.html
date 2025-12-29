@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>현장 사진 증거표시</title>
+
+<style>
+body{margin:0;font-family:system-ui;background:#f2f2f2}
+header{
+  background:#111;color:#fff;padding:8px;
+  display:flex;gap:6px;align-items:center;flex-wrap:wrap
+}
+#container{position:relative;width:100%}
+#photo{width:100%;display:block}
+canvas{position:absolute;left:0;top:0}
+.mark{
+  position:absolute;background:#fff;border:1px solid #aaa;
+  border-radius:6px;padding:4px;font-size:13px;width:160px
+}
+.mark b{display:block;margin-bottom:2px}
+.mark input{width:100%;border:none;outline:none}
+button{padding:4px 8px;font-size:13px}
+</style>
+</head>
+
+<body>
+
+<header>
+  <input type="file" id="file" accept="image/*">
+  <select id="color">
+    <option value="red">🔴 Red</option>
+    <option value="blue">🔵 Blue</option>
+    <option value="green">🟢 Green</option>
+  </select>
+  <button onclick="saveImage()">증거사진 저장</button>
+</header>
+
+<div id="container">
+  <img id="photo">
+  <canvas id="overlay"></canvas>
+</div>
+
+<script>
+const img=document.getElementById("photo");
+const canvas=document.getElementById("overlay");
+const ctx=canvas.getContext("2d");
+const container=document.getElementById("container");
+const colorSel=document.getElementById("color");
+
+let startX,startY,drawing=false;
+let evidenceNo=1;
+const marks=[];
+
+document.getElementById("file").addEventListener("change",e=>{
+  const f=e.target.files[0];
+  if(!f) return;
+  img.src=URL.createObjectURL(f);
+});
+
+img.onload=()=>{
+  canvas.width=img.clientWidth;
+  canvas.height=img.clientHeight;
+};
+
+canvas.addEventListener("touchstart",e=>{
+  e.preventDefault();
+  const t=e.touches[0];
+  const r=canvas.getBoundingClientRect();
+  startX=t.clientX-r.left;
+  startY=t.clientY-r.top;
+  drawing=true;
+});
+
+canvas.addEventListener("touchend",e=>{
+  drawing=false;
+  const r=40;
+
+  marks.push({x:startX,y:startY,r,color:colorSel.value,no:evidenceNo});
+
+  const box=document.createElement("div");
+  box.className="mark";
+  box.style.left=(startX-80)+"px";
+  box.style.top=(startY+r+6)+"px";
+  box.innerHTML=`<b>증거 ${evidenceNo}</b><input placeholder="내용 입력">`;
+  container.appendChild(box);
+
+  evidenceNo++;
+  redraw();
+});
+
+function redraw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  marks.forEach(m=>{
+    ctx.beginPath();
+    ctx.arc(m.x,m.y,m.r,0,Math.PI*2);
+    ctx.strokeStyle=m.color;
+    ctx.lineWidth=4;
+    ctx.stroke();
+    ctx.fillStyle=m.color;
+    ctx.font="bold 16px sans-serif";
+    ctx.fillText(m.no,m.x-6,m.y+6);
+  });
+}
+
+/* 🔐 증거사진 저장 핵심 */
+function saveImage(){
+  const out=document.createElement("canvas");
+  out.width=img.naturalWidth;
+  out.height=img.naturalHeight;
+  const octx=out.getContext("2d");
+
+  // 원본 사진
+  octx.drawImage(img,0,0,out.width,out.height);
+
+  const sx=out.width/canvas.width;
+  const sy=out.height/canvas.height;
+
+  // 원 + 번호
+  marks.forEach((m,i)=>{
+    octx.beginPath();
+    octx.arc(m.x*sx,m.y*sy,m.r*sx,0,Math.PI*2);
+    octx.strokeStyle=m.color;
+    octx.lineWidth=6;
+    octx.stroke();
+
+    octx.fillStyle=m.color;
+    octx.font="bold 32px sans-serif";
+    octx.fillText(m.no,m.x*sx-10,m.y*sy+10);
+  });
+
+  // 설명 텍스트
+  document.querySelectorAll(".mark").forEach((box,i)=>{
+    const input=box.querySelector("input").value;
+    if(!input) return;
+    const x=parseInt(box.style.left)*sx;
+    const y=parseInt(box.style.top)*sy;
+    octx.fillStyle="#000";
+    octx.font="24px sans-serif";
+    octx.fillText(`증거 ${i+1}: ${input}`,x,y+24);
+  });
+
+  const link=document.createElement("a");
+  link.href=out.toDataURL("image/jpeg",0.95);
+  link.download="증거사진.jpg";
+  link.click();
+}
+</script>
+
+</body>
+</html>
