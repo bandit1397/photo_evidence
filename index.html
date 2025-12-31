@@ -178,7 +178,7 @@ function endAction(){
   box.className = "mark";
   box.style.left = (startX - 80) + "px";
   box.style.top  = (startY + r + 6) + "px";
-  box.innerHTML = `<b>증거 ${evidenceNo}</b><input placeholder="내용 입력">`;
+  box.innerHTML = `<input placeholder="내용 입력">`;
   container.appendChild(box);
 
   evidenceNo++;
@@ -304,21 +304,13 @@ function saveImage(){
     octx.textAlign = "center";
     octx.textBaseline = "middle";
 
-    // ② 제목 (상단 중앙)
+    // 내용만 중앙에
     octx.fillStyle = "#000";
-    octx.font = `${14*sy}px sans-serif`;
-    octx.fillText(
-      `증거 ${i+1}`,
-      boxX + boxW / 2,
-      boxY + boxH * 0.35
-    );
-
-    // ③ 내용 (하단 중앙)
     octx.font = `${13*sy}px sans-serif`;
     octx.fillText(
       input,
       boxX + boxW / 2,
-      boxY + boxH * 0.75
+      boxY + boxH / 2
     );
 
     // 정렬 초기화 (다른 그림 영향 방지)
