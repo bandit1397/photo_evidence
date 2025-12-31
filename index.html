@@ -110,19 +110,38 @@ function hitTest(x, y, m){
   const dy = y - m.y;
   return Math.sqrt(dx*dx + dy*dy) <= m.r;
 }
+  
 
 /* ===== START (선택 or 새 원 준비) ===== */
 canvas.addEventListener("mousedown", startAction);
 canvas.addEventListener("touchstart", startAction);
 
-canvas.addEventListener("dblclick", (e)=>{
-    if(selectedIndex === null) return;
-    const text = prompt("박스에 넣을 텍스트를 입력하세요:", marks[selectedIndex].text || "");
-    if(text !== null){
-        marks[selectedIndex].text = text;
-        redraw();
+// PC용 더블클릭
+canvas.addEventListener("dblclick", handleTextInput);
+
+// 모바일용 터치
+canvas.addEventListener("touchend", (e)=>{
+  e.preventDefault();
+  const {x, y} = getPos(e);
+  for(let i = marks.length - 1; i >= 0; i--){
+    if(hitTest(x, y, marks[i])){
+      selectedIndex = i;
+      handleTextInput();
+      return;
     }
+  }
 });
+
+// 공용 텍스트 입력 함수
+function handleTextInput(){
+  if(selectedIndex === null) return;
+  const text = prompt("박스에 넣을 텍스트를 입력하세요:", marks[selectedIndex].text || "");
+  if(text !== null){
+    marks[selectedIndex].text = text;
+    redraw();
+  }
+}
+
 
 function startAction(e){
   e.preventDefault();
