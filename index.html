@@ -226,28 +226,63 @@ function deleteSelected(){
 function redraw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
+  const sx = canvas.width / img.clientWidth;
+  const sy = canvas.height / img.clientHeight;
+
   marks.forEach((m,i)=>{
+    // ===== 원 그리기 =====
     ctx.beginPath();
     ctx.arc(m.x, m.y, m.r, 0, Math.PI*2);
     ctx.strokeStyle = m.color;
     ctx.lineWidth = m.line;
 
-    if(i === selectedIndex){
-      ctx.setLineDash([6,4]);
-    }else{
-      ctx.setLineDash([]);
-    }
+    if(i === selectedIndex) ctx.setLineDash([6,4]);
+    else ctx.setLineDash([]);
 
     ctx.stroke();
     ctx.setLineDash([]);
 
+    // ===== 원 번호 그리기 =====
     ctx.fillStyle = m.color;
     ctx.font = "bold 16px sans-serif";
-    ctx.fillText(m.no, m.x - 6, m.y + 6);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(m.no, m.x, m.y);
+
+    // ===== 박스 텍스트 그리기 =====
+    const box = document.querySelectorAll(".mark")[i];
+    if(!box) return;
+
+    const input = box.querySelector("input").value;
+    if(!input) return;
+
+    const boxX = (m.x - 80) * sx;
+    const boxY = (m.y + m.r + 6) * sy;
+    const boxW = 160 * sx;
+    const boxH = 44 * sy;
+
+    // 박스 배경
+    ctx.fillStyle = "#ffffff";
+    ctx.strokeStyle = "#aaaaaa";
+    ctx.lineWidth = 2 * sx;
+    ctx.fillRect(boxX, boxY, boxW, boxH);
+    ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+    // 박스 텍스트
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#000";
+    const fontSize = parseInt(fontSizeInput.value);
+    ctx.font = `${fontSize*sy}px sans-serif`;
+    ctx.fillText(input, boxX + boxW / 2, boxY + boxH / 2);
+
+    // 정렬 초기화
+    ctx.textAlign = "left";
+    ctx.textBaseline = "alphabetic";
   });
 }
 
-/* 슬라이더 */
+/* 슬라이더 이벤트 */
 radiusInput.addEventListener("input", ()=>{
   if(selectedIndex === null) return;
   marks[selectedIndex].r = parseInt(radiusInput.value);
@@ -258,6 +293,10 @@ lineInput.addEventListener("input", ()=>{
   if(selectedIndex === null) return;
   marks[selectedIndex].line = parseInt(lineInput.value);
   redraw();
+});
+
+fontSizeInput.addEventListener("input", ()=>{
+  redraw();  // 선택 여부 상관없이 모든 박스 글자 크기 업데이트
 });
 
 /* 저장 */
@@ -272,68 +311,60 @@ function saveImage(){
   const sx = out.width / canvas.width;
   const sy = out.height / canvas.height;
 
-  marks.forEach(m=>{
+  marks.forEach((m,i)=>{
+    // ===== 원 그리기 =====
     octx.beginPath();
     octx.arc(m.x*sx, m.y*sy, m.r*sx, 0, Math.PI*2);
     octx.strokeStyle = m.color;
     octx.lineWidth = m.line * sx;
     octx.stroke();
 
+    // ===== 원 번호 =====
     octx.fillStyle = m.color;
     octx.font = "bold 32px sans-serif";
-    octx.fillText(m.no, m.x*sx - 10, m.y*sy + 10);
-  });
+    octx.textAlign = "center";
+    octx.textBaseline = "middle";
+    octx.fillText(m.no, m.x*sx, m.y*sy);
 
-  marks.forEach((m,i)=>{
+    // ===== 박스 텍스트 =====
     const box = document.querySelectorAll(".mark")[i];
     if(!box) return;
 
     const input = box.querySelector("input").value;
     if(!input) return;
 
-    // === 박스 위치 계산 ===
     const boxX = (m.x - 80) * sx;
     const boxY = (m.y + m.r + 6) * sy;
     const boxW = 160 * sx;
     const boxH = 44 * sy;
 
-    // ① 박스 배경
+    // 박스 배경
     octx.fillStyle = "#ffffff";
     octx.strokeStyle = "#aaaaaa";
     octx.lineWidth = 2 * sx;
     octx.fillRect(boxX, boxY, boxW, boxH);
     octx.strokeRect(boxX, boxY, boxW, boxH);
 
-    // 공통 정렬
+    // 박스 텍스트
     octx.textAlign = "center";
     octx.textBaseline = "middle";
-
-    // ② 내용 그리기
     octx.fillStyle = "#000";
-
-    // 사용자가 지정한 크기 가져오기
     const fontSize = parseInt(fontSizeInput.value);
     octx.font = `${fontSize*sy}px sans-serif`;
-
-    octx.fillText(
-      input,
-      boxX + boxW / 2,
-      boxY + boxH / 2
-    );
+    octx.fillText(input, boxX + boxW / 2, boxY + boxH / 2);
 
     // 정렬 초기화
     octx.textAlign = "left";
     octx.textBaseline = "alphabetic";
-});
+  });
 
-
-
-
+  // 저장
   const a=document.createElement("a");
   a.href = out.toDataURL("image/jpeg",0.95);
   a.download = "증거사진.jpg";
   a.click();
 }
+
 </script>
 
 </body>
