@@ -319,8 +319,8 @@ function redraw() {
     const box = document.querySelectorAll(".mark")[i];
     if (!box) return;
 
-    const input = box.querySelector("input").value;
-    if (!input) return;
+    const input = marks[i].text || box.querySelector("input").value;
+    if(!input) return;
 
     // 글자 크기 계산
     const fontSize = parseInt(fontSizeInput.value);
