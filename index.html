@@ -59,6 +59,7 @@ const lineInput   = document.getElementById("line");
 let startX,startY,drawing=false;
 let evidenceNo=1;
 const marks=[];
+let selectedIndex = null;
 
 document.getElementById("file").addEventListener("change",e=>{
   const f=e.target.files[0];
@@ -94,6 +95,8 @@ canvas.addEventListener("touchend",e=>{
     no:evidenceNo
   });
 
+  selectedIndex = marks.length - 1;
+
   const box=document.createElement("div");
   box.className="mark";
   box.style.left=(startX-80)+"px";
@@ -118,6 +121,24 @@ function redraw(){
     ctx.fillText(m.no,m.x-6,m.y+6);
   });
 }
+
+// ④ 캔버스 클릭/드래그 등 기존 이벤트들
+//canvas.addEventListener("mousedown", ...);
+//canvas.addEventListener("mousemove", ...);
+//canvas.addEventListener("mouseup", ...);
+
+// ✅ ⑤ 여기 ←↓↓↓↓ 추가
+radiusInput.addEventListener("input", ()=>{
+  if(selectedIndex === null) return;
+  marks[selectedIndex].r = parseInt(radiusInput.value);
+  redraw();
+});
+
+lineInput.addEventListener("input", ()=>{
+  if(selectedIndex === null) return;
+  marks[selectedIndex].line = parseInt(lineInput.value);
+  redraw();
+});
 
 /* 🔐 증거사진 저장 핵심 */
 function saveImage(){
