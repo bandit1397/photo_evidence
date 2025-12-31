@@ -33,6 +33,12 @@ button{padding:4px 8px;font-size:13px}
     <option value="blue">🔵 Blue</option>
     <option value="green">🟢 Green</option>
   </select>
+  원크기
+  <input type="range" id="radius" min="15" max="120" value="40">
+
+  선굵기
+  <input type="range" id="line" min="2" max="12" value="4">
+  
   <button onclick="saveImage()">증거사진 저장</button>
 </header>
 
@@ -47,6 +53,8 @@ const canvas=document.getElementById("overlay");
 const ctx=canvas.getContext("2d");
 const container=document.getElementById("container");
 const colorSel=document.getElementById("color");
+const radiusInput = document.getElementById("radius");
+const lineInput   = document.getElementById("line");
 
 let startX,startY,drawing=false;
 let evidenceNo=1;
@@ -74,9 +82,17 @@ canvas.addEventListener("touchstart",e=>{
 
 canvas.addEventListener("touchend",e=>{
   drawing=false;
-  const r=40;
+  const r  = parseInt(radiusInput.value);
+  const lw = parseInt(lineInput.value);
 
-  marks.push({x:startX,y:startY,r,color:colorSel.value,no:evidenceNo});
+  marks.push({
+    x:startX,
+    y:startY,
+    r:r,
+    line: lw,
+    color:colorSel.value,
+    no:evidenceNo
+  });
 
   const box=document.createElement("div");
   box.className="mark";
@@ -95,7 +111,7 @@ function redraw(){
     ctx.beginPath();
     ctx.arc(m.x,m.y,m.r,0,Math.PI*2);
     ctx.strokeStyle=m.color;
-    ctx.lineWidth=4;
+    ctx.lineWidth=m.line;
     ctx.stroke();
     ctx.fillStyle=m.color;
     ctx.font="bold 16px sans-serif";
@@ -121,7 +137,7 @@ function saveImage(){
     octx.beginPath();
     octx.arc(m.x*sx,m.y*sy,m.r*sx,0,Math.PI*2);
     octx.strokeStyle=m.color;
-    octx.lineWidth=6;
+    octx.lineWidth = m.line * sx;
     octx.stroke();
 
     octx.fillStyle=m.color;
