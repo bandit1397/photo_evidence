@@ -33,12 +33,13 @@ button{padding:4px 8px;font-size:13px}
     <option value="blue">🔵 Blue</option>
     <option value="green">🟢 Green</option>
   </select>
+
   원크기
   <input type="range" id="radius" min="15" max="120" value="40">
 
   선굵기
   <input type="range" id="line" min="2" max="12" value="4">
-  
+
   <button onclick="saveImage()">증거사진 저장</button>
   <button onclick="deleteSelected()">선택 원 삭제</button>
 </header>
@@ -49,68 +50,114 @@ button{padding:4px 8px;font-size:13px}
 </div>
 
 <script>
-const img=document.getElementById("photo");
-const canvas=document.getElementById("overlay");
-const ctx=canvas.getContext("2d");
-const container=document.getElementById("container");
-const colorSel=document.getElementById("color");
+const img = document.getElementById("photo");
+const canvas = document.getElementById("overlay");
+const ctx = canvas.getContext("2d");
+
+const container = document.getElementById("container");
+const colorSel = document.getElementById("color");
 const radiusInput = document.getElementById("radius");
-const lineInput   = document.getElementById("line");
+const lineInput = document.getElementById("line");
 
-let startX,startY,drawing=false;
-let evidenceNo=1;
-const marks=[];
+/* 상태 변수 */
+const marks = [];
 let selectedIndex = null;
+let evidenceNo = 1;
 
-document.getElementById("file").addEventListener("change",e=>{
-  const f=e.target.files[0];
-  if(!f) return;
-  img.src=URL.createObjectURL(f);
-});
+let startX = 0, startY = 0;
+let drawing = false;
 
-img.onload=()=>{
-  canvas.width=img.clientWidth;
-  canvas.height=img.clientHeight;
-};
+let dragging = false;
+let dragOffsetX = 0;
+let dragOffsetY = 0;
 
-canvas.addEventListener("touchstart", e=>{
+/* 좌표 계산 */
+function getPos(e){
+  const rect = canvas.getBoundingClientRect();
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  return {
+    x: clientX - rect.left,
+    y: clientY - rect.top
+  };
+}
+
+/* 원 히트 테스트 */
+function hitTest(x, y, m){
+  const dx = x - m.x;
+  const dy = y - m.y;
+  return Math.sqrt(dx*dx + dy*dy) <= m.r;
+}
+
+/* ===== START (선택 or 새 원 준비) ===== */
+canvas.addEventListener("mousedown", startAction);
+canvas.addEventListener("touchstart", startAction);
+
+function startAction(e){
   e.preventDefault();
 
-  const t = e.touches[0];
-  const rect = canvas.getBoundingClientRect();
-  const x = t.clientX - rect.left;
-  const y = t.clientY - rect.top;
-
+  const {x, y} = getPos(e);
   selectedIndex = null;
+  dragging = false;
+  drawing = false;
 
-  // ① 기존 원 선택 여부 확인 (뒤에 그린 원 우선)
+  // 기존 원 선택 (위에 있는 것 우선)
   for(let i = marks.length - 1; i >= 0; i--){
-    const m = marks[i];
-    const dx = x - m.x;
-    const dy = y - m.y;
-
-    if(Math.sqrt(dx*dx + dy*dy) <= m.r){
+    if(hitTest(x, y, marks[i])){
       selectedIndex = i;
+      dragging = true;
 
-      // 슬라이더를 선택된 원 값으로 동기화
-      radiusInput.value = m.r;
-      lineInput.value   = m.line;
+      dragOffsetX = x - marks[i].x;
+      dragOffsetY = y - marks[i].y;
 
-      drawing = false;   // ⚠ 새 원 생성 방지
-      return;            // ⚠ 여기서 종료
+      radiusInput.value = marks[i].r;
+      lineInput.value   = marks[i].line;
+
+      redraw();
+      return;
     }
   }
 
-  // ② 기존 원이 아니면 → 새 원 생성 준비
+  // 새 원 생성 준비
   startX = x;
   startY = y;
   drawing = true;
- });
+}
 
+/* ===== MOVE (드래그 이동) ===== */
+canvas.addEventListener("mousemove", moveAction);
+canvas.addEventListener("touchmove", moveAction);
 
-canvas.addEventListener("touchend", e=>{
-  if(!drawing) return;   // 🔴 선택만 했을 경우 방지
+function moveAction(e){
+  if(!dragging || selectedIndex === null) return;
+  e.preventDefault();
 
+  const {x, y} = getPos(e);
+  const m = marks[selectedIndex];
+
+  m.x = x - dragOffsetX;
+  m.y = y - dragOffsetY;
+
+  const box = document.querySelectorAll(".mark")[selectedIndex];
+  if(box){
+    box.style.left = (m.x - 80) + "px";
+    box.style.top  = (m.y + m.r + 6) + "px";
+  }
+
+  redraw();
+}
+
+/* ===== END (드래그 종료 + 새 원 생성) ===== */
+canvas.addEventListener("mouseup", endAction);
+canvas.addEventListener("touchend", endAction);
+
+function endAction(){
+  if(dragging){
+    dragging = false;
+    return;
+  }
+
+  if(!drawing) return;
   drawing = false;
 
   const r  = parseInt(radiusInput.value);
@@ -119,7 +166,7 @@ canvas.addEventListener("touchend", e=>{
   marks.push({
     x: startX,
     y: startY,
-    r: r,
+    r,
     line: lw,
     color: colorSel.value,
     no: evidenceNo
@@ -127,37 +174,40 @@ canvas.addEventListener("touchend", e=>{
 
   selectedIndex = marks.length - 1;
 
-  const box=document.createElement("div");
-  box.className="mark";
-  box.style.left=(startX-80)+"px";
-  box.style.top=(startY+r+6)+"px";
-  box.innerHTML=`<b>증거 ${evidenceNo}</b><input placeholder="내용 입력">`;
+  const box = document.createElement("div");
+  box.className = "mark";
+  box.style.left = (startX - 80) + "px";
+  box.style.top  = (startY + r + 6) + "px";
+  box.innerHTML = `<b>증거 ${evidenceNo}</b><input placeholder="내용 입력">`;
   container.appendChild(box);
 
   evidenceNo++;
   redraw();
+}
+
+/* 이미지 로드 */
+document.getElementById("file").addEventListener("change", e=>{
+  const f = e.target.files[0];
+  if(!f) return;
+  img.src = URL.createObjectURL(f);
 });
 
-// 🔴 바로 여기 ⭐⭐⭐
+img.onload = ()=>{
+  canvas.width = img.clientWidth;
+  canvas.height = img.clientHeight;
+};
+
+/* 삭제 */
 function deleteSelected(){
   if(selectedIndex === null){
     alert("삭제할 증거를 먼저 선택하세요.");
     return;
   }
 
-  // 설명 박스 제거
-  const boxes = document.querySelectorAll(".mark");
-  if(boxes[selectedIndex]){
-    boxes[selectedIndex].remove();
-  }
-
-  // 데이터 제거
+  document.querySelectorAll(".mark")[selectedIndex]?.remove();
   marks.splice(selectedIndex, 1);
 
-  // 🔧 번호 재정렬 (핵심)
-  marks.forEach((m, i) => {
-    m.no = i + 1;
-  });
+  marks.forEach((m,i)=>m.no=i+1);
   evidenceNo = marks.length + 1;
 
   document.querySelectorAll(".mark b").forEach((b,i)=>{
@@ -168,15 +218,15 @@ function deleteSelected(){
   redraw();
 }
 
-
+/* 다시 그리기 */
 function redraw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
   marks.forEach((m,i)=>{
     ctx.beginPath();
-    ctx.arc(m.x,m.y,m.r,0,Math.PI*2);
-    ctx.strokeStyle=m.color;
-    ctx.lineWidth=m.line;
+    ctx.arc(m.x, m.y, m.r, 0, Math.PI*2);
+    ctx.strokeStyle = m.color;
+    ctx.lineWidth = m.line;
 
     if(i === selectedIndex){
       ctx.setLineDash([6,4]);
@@ -187,19 +237,13 @@ function redraw(){
     ctx.stroke();
     ctx.setLineDash([]);
 
-    ctx.fillStyle=m.color;
-    ctx.font="bold 16px sans-serif";
-    ctx.fillText(m.no,m.x-6,m.y+6);
+    ctx.fillStyle = m.color;
+    ctx.font = "bold 16px sans-serif";
+    ctx.fillText(m.no, m.x - 6, m.y + 6);
   });
 }
 
-
-// ④ 캔버스 클릭/드래그 등 기존 이벤트들
-//canvas.addEventListener("mousedown", ...);
-//canvas.addEventListener("mousemove", ...);
-//canvas.addEventListener("mouseup", ...);
-
-// ✅ ⑤ 여기 ←↓↓↓↓ 추가
+/* 슬라이더 */
 radiusInput.addEventListener("input", ()=>{
   if(selectedIndex === null) return;
   marks[selectedIndex].r = parseInt(radiusInput.value);
@@ -212,47 +256,44 @@ lineInput.addEventListener("input", ()=>{
   redraw();
 });
 
-/* 🔐 증거사진 저장 핵심 */
+/* 저장 */
 function saveImage(){
-  const out=document.createElement("canvas");
-  out.width=img.naturalWidth;
-  out.height=img.naturalHeight;
-  const octx=out.getContext("2d");
+  const out = document.createElement("canvas");
+  out.width = img.naturalWidth;
+  out.height = img.naturalHeight;
+  const octx = out.getContext("2d");
 
-  // 원본 사진
-  octx.drawImage(img,0,0,out.width,out.height);
+  octx.drawImage(img, 0, 0, out.width, out.height);
 
-  const sx=out.width/canvas.width;
-  const sy=out.height/canvas.height;
+  const sx = out.width / canvas.width;
+  const sy = out.height / canvas.height;
 
-  // 원 + 번호
-  marks.forEach((m,i)=>{
+  marks.forEach(m=>{
     octx.beginPath();
-    octx.arc(m.x*sx,m.y*sy,m.r*sx,0,Math.PI*2);
-    octx.strokeStyle=m.color;
+    octx.arc(m.x*sx, m.y*sy, m.r*sx, 0, Math.PI*2);
+    octx.strokeStyle = m.color;
     octx.lineWidth = m.line * sx;
     octx.stroke();
 
-    octx.fillStyle=m.color;
-    octx.font="bold 32px sans-serif";
-    octx.fillText(m.no,m.x*sx-10,m.y*sy+10);
+    octx.fillStyle = m.color;
+    octx.font = "bold 32px sans-serif";
+    octx.fillText(m.no, m.x*sx - 10, m.y*sy + 10);
   });
 
-  // 설명 텍스트
   document.querySelectorAll(".mark").forEach((box,i)=>{
-    const input=box.querySelector("input").value;
-    if(!input) return;
-    const x=parseInt(box.style.left)*sx;
-    const y=parseInt(box.style.top)*sy;
+    const text = box.querySelector("input").value;
+    if(!text) return;
+    const x = (parseFloat(box.style.left) + 4) * sx;
+    const y = (parseFloat(box.style.top) + 16) * sy;
     octx.fillStyle="#000";
     octx.font="24px sans-serif";
-    octx.fillText(`증거 ${i+1}: ${input}`,x,y+24);
+    octx.fillText(`증거 ${i+1}: ${text}`, x, y);
   });
 
-  const link=document.createElement("a");
-  link.href=out.toDataURL("image/jpeg",0.95);
-  link.download="증거사진.jpg";
-  link.click();
+  const a=document.createElement("a");
+  a.href = out.toDataURL("image/jpeg",0.95);
+  a.download = "증거사진.jpg";
+  a.click();
 }
 </script>
 
