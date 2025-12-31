@@ -280,15 +280,37 @@ function saveImage(){
     octx.fillText(m.no, m.x*sx - 10, m.y*sy + 10);
   });
 
-  document.querySelectorAll(".mark").forEach((box,i)=>{
-    const text = box.querySelector("input").value;
-    if(!text) return;
-    const x = (parseFloat(box.style.left) + 4) * sx;
-    const y = (parseFloat(box.style.top) + 16) * sy;
-    octx.fillStyle="#000";
-    octx.font="24px sans-serif";
-    octx.fillText(`증거 ${i+1}: ${text}`, x, y);
+  marks.forEach((m,i)=>{
+    const box = document.querySelectorAll(".mark")[i];
+    if(!box) return;
+
+    const input = box.querySelector("input").value;
+    if(!input) return;
+
+    // === 박스 위치 (화면 → 원본 비율 변환) ===
+    const boxX = (m.x - 80) * sx;
+    const boxY = (m.y + m.r + 6) * sy;
+    const boxW = 160 * sx;
+    const boxH = 44 * sy;
+
+    // ① 박스 배경
+    octx.fillStyle = "#ffffff";
+    octx.strokeStyle = "#aaaaaa";
+    octx.lineWidth = 2 * sx;
+    octx.fillRect(boxX, boxY, boxW, boxH);
+    octx.strokeRect(boxX, boxY, boxW, boxH);
+
+    // ② 제목
+    octx.fillStyle = "#000";
+    octx.font = `${14*sy}px sans-serif`;
+    octx.fillText(`증거 ${i+1}`, boxX + 6*sx, boxY + 16*sy);
+
+    // ③ 내용
+    octx.font = `${13*sy}px sans-serif`;
+    octx.fillText(input, boxX + 6*sx, boxY + 34*sy);
   });
+
+
 
   const a=document.createElement("a");
   a.href = out.toDataURL("image/jpeg",0.95);
