@@ -59,6 +59,7 @@ const lineInput   = document.getElementById("line");
 let startX,startY,drawing=false;
 let evidenceNo=1;
 const marks=[];
+let selectedIndex = null;
 
 document.getElementById("file").addEventListener("change",e=>{
   const f=e.target.files[0];
@@ -71,28 +72,59 @@ img.onload=()=>{
   canvas.height=img.clientHeight;
 };
 
-canvas.addEventListener("touchstart",e=>{
+canvas.addEventListener("touchstart", e=>{
   e.preventDefault();
-  const t=e.touches[0];
-  const r=canvas.getBoundingClientRect();
-  startX=t.clientX-r.left;
-  startY=t.clientY-r.top;
-  drawing=true;
-});
 
-canvas.addEventListener("touchend",e=>{
-  drawing=false;
+  const t = e.touches[0];
+  const rect = canvas.getBoundingClientRect();
+  const x = t.clientX - rect.left;
+  const y = t.clientY - rect.top;
+
+  selectedIndex = null;
+
+  // ① 기존 원 선택 여부 확인 (뒤에 그린 원 우선)
+  for(let i = marks.length - 1; i >= 0; i--){
+    const m = marks[i];
+    const dx = x - m.x;
+    const dy = y - m.y;
+
+    if(Math.sqrt(dx*dx + dy*dy) <= m.r){
+      selectedIndex = i;
+
+      // 슬라이더를 선택된 원 값으로 동기화
+      radiusInput.value = m.r;
+      lineInput.value   = m.line;
+
+      drawing = false;   // ⚠ 새 원 생성 방지
+      return;            // ⚠ 여기서 종료
+    }
+  }
+
+  // ② 기존 원이 아니면 → 새 원 생성 준비
+  startX = x;
+  startY = y;
+  drawing = true;
+ });
+
+
+canvas.addEventListener("touchend", e=>{
+  if(!drawing) return;   // 🔴 선택만 했을 경우 방지
+
+  drawing = false;
+
   const r  = parseInt(radiusInput.value);
   const lw = parseInt(lineInput.value);
 
   marks.push({
-    x:startX,
-    y:startY,
-    r:r,
+    x: startX,
+    y: startY,
+    r: r,
     line: lw,
-    color:colorSel.value,
-    no:evidenceNo
+    color: colorSel.value,
+    no: evidenceNo
   });
+
+  selectedIndex = marks.length - 1;
 
   const box=document.createElement("div");
   box.className="mark";
@@ -104,6 +136,7 @@ canvas.addEventListener("touchend",e=>{
   evidenceNo++;
   redraw();
 });
+
 
 function redraw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -118,6 +151,24 @@ function redraw(){
     ctx.fillText(m.no,m.x-6,m.y+6);
   });
 }
+
+// ④ 캔버스 클릭/드래그 등 기존 이벤트들
+//canvas.addEventListener("mousedown", ...);
+//canvas.addEventListener("mousemove", ...);
+//canvas.addEventListener("mouseup", ...);
+
+// ✅ ⑤ 여기 ←↓↓↓↓ 추가
+radiusInput.addEventListener("input", ()=>{
+  if(selectedIndex === null) return;
+  marks[selectedIndex].r = parseInt(radiusInput.value);
+  redraw();
+});
+
+lineInput.addEventListener("input", ()=>{
+  if(selectedIndex === null) return;
+  marks[selectedIndex].line = parseInt(lineInput.value);
+  redraw();
+});
 
 /* 🔐 증거사진 저장 핵심 */
 function saveImage(){
