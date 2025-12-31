@@ -144,8 +144,11 @@ function moveAction(e){
 
   const box = document.querySelectorAll(".mark")[selectedIndex];
   if(box){
-    box.style.left = (m.x - 80) + "px";
-    box.style.top  = (m.y + m.r + 6) + "px";
+    const fontSize = parseInt(fontSizeInput.value);
+    const textMetrics = ctx.measureText(box.querySelector("input").value);
+    const textWidth = textMetrics.width + 16; // 여백
+    box.style.width = textWidth + "px";
+    box.style.top = (marks[selectedIndex].y + marks[selectedIndex].r + 6) + "px";
   }
 
   redraw();
@@ -234,7 +237,7 @@ function redraw(){
     ctx.beginPath();
     ctx.arc(m.x, m.y, m.r, 0, Math.PI*2);
     ctx.strokeStyle = m.color;
-    ctx.lineWidth = m.line;
+    ctx.lineWidth = m.line * sx; 
 
     if(i === selectedIndex) ctx.setLineDash([6,4]);
     else ctx.setLineDash([]);
@@ -265,8 +268,8 @@ function redraw(){
     const textWidth = textMetrics.width + 16*sy; // 좌우 여백
     const textHeight = fontSize*sy + 8*sy;      // 상하 여백
 
-    const boxX = m.x* sx - textWidth / 2;
-    const boxY = (m.y + m.r + 6) * sy;
+    const boxX = m.x - textWidth / 2;
+    const boxY = m.y + m.r + 6;
     const boxW = textWidth;
     const boxH = textHeight;
 
@@ -288,13 +291,32 @@ function redraw(){
     ctx.textBaseline = "alphabetic";
 });
 
-  // 저장
-  const a=document.createElement("a");
-  a.href = out.toDataURL("image/jpeg",0.95);
-  a.download = "증거사진.jpg";
-  a.click();
-}
+/* === 슬라이더 이벤트 등록 === */
+radiusInput.addEventListener("input", ()=>{
+  if(selectedIndex === null) return;
+  marks[selectedIndex].r = parseInt(radiusInput.value);
+  redraw();
+});
 
+lineInput.addEventListener("input", ()=>{
+  if(selectedIndex === null) return;
+  marks[selectedIndex].line = parseInt(lineInput.value);
+  redraw();
+});
+
+fontSizeInput.addEventListener("input", ()=>{
+  if(selectedIndex === null) return;
+  redraw();  // 글자 크기는 marks 배열에서 참조하므로 바로 redraw 호출
+});
+}
+function saveImage() {
+    const a = document.createElement("a");
+    a.href = canvas.toDataURL("image/jpeg", 0.95);
+    a.download = "증거사진.jpg";
+    a.click();
+  }
+
+  
 </script>
 
 </body>
