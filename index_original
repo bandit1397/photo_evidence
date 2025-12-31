@@ -300,15 +300,32 @@ function saveImage(){
     octx.fillRect(boxX, boxY, boxW, boxH);
     octx.strokeRect(boxX, boxY, boxW, boxH);
 
-    // ② 제목
+    // 공통 정렬 설정
+    octx.textAlign = "center";
+    octx.textBaseline = "middle";
+
+    // ② 제목 (상단 중앙)
     octx.fillStyle = "#000";
     octx.font = `${14*sy}px sans-serif`;
-    octx.fillText(`증거 ${i+1}`, boxX + 6*sx, boxY + 16*sy);
+    octx.fillText(
+      `증거 ${i+1}`,
+      boxX + boxW / 2,
+      boxY + boxH * 0.35
+    );
 
-    // ③ 내용
+    // ③ 내용 (하단 중앙)
     octx.font = `${13*sy}px sans-serif`;
-    octx.fillText(input, boxX + 6*sx, boxY + 34*sy);
-  });
+    octx.fillText(
+      input,
+      boxX + boxW / 2,
+      boxY + boxH * 0.75
+    );
+
+    // 정렬 초기화 (다른 그림 영향 방지)
+    octx.textAlign = "left";
+    octx.textBaseline = "alphabetic";
+
+    });
 
 
 
