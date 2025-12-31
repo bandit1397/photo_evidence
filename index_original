@@ -40,6 +40,9 @@ button{padding:4px 8px;font-size:13px}
   선굵기
   <input type="range" id="line" min="2" max="12" value="4">
 
+  문자크기
+  <input type="range" id="fontSize" min="8" max="40" value="13">
+
   <button onclick="saveImage()">증거사진 저장</button>
   <button onclick="deleteSelected()">선택 원 삭제</button>
 </header>
@@ -58,6 +61,7 @@ const container = document.getElementById("container");
 const colorSel = document.getElementById("color");
 const radiusInput = document.getElementById("radius");
 const lineInput = document.getElementById("line");
+const fontSizeInput = document.getElementById("fontSize"); // 여기
 
 /* 상태 변수 */
 const marks = [];
@@ -140,8 +144,11 @@ function moveAction(e){
 
   const box = document.querySelectorAll(".mark")[selectedIndex];
   if(box){
-    box.style.left = (m.x - 80) + "px";
-    box.style.top  = (m.y + m.r + 6) + "px";
+    const fontSize = parseInt(fontSizeInput.value);
+    const textMetrics = ctx.measureText(box.querySelector("input").value);
+    const textWidth = textMetrics.width + 16; // 여백
+    box.style.width = textWidth + "px";
+    box.style.top = (marks[selectedIndex].y + marks[selectedIndex].r + 6) + "px";
   }
 
   redraw();
@@ -178,7 +185,7 @@ function endAction(){
   box.className = "mark";
   box.style.left = (startX - 80) + "px";
   box.style.top  = (startY + r + 6) + "px";
-  box.innerHTML = `<b>증거 ${evidenceNo}</b><input placeholder="내용 입력">`;
+  box.innerHTML = `<input placeholder="내용 입력">`;
   container.appendChild(box);
 
   evidenceNo++;
@@ -220,30 +227,76 @@ function deleteSelected(){
 
 /* 다시 그리기 */
 function redraw(){
+  // 1. 캔버스 초기화
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  marks.forEach((m,i)=>{
+  // 2. 원본 이미지 그리기
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+  const sx = canvas.width / img.clientWidth;
+  const sy = canvas.height / img.clientHeight;
+
+ marks.forEach((m,i)=>{
+    // ===== 원 그리기 =====
     ctx.beginPath();
     ctx.arc(m.x, m.y, m.r, 0, Math.PI*2);
     ctx.strokeStyle = m.color;
-    ctx.lineWidth = m.line;
+    ctx.lineWidth = m.line * sx; 
 
-    if(i === selectedIndex){
-      ctx.setLineDash([6,4]);
-    }else{
-      ctx.setLineDash([]);
-    }
+    if(i === selectedIndex) ctx.setLineDash([6,4]);
+    else ctx.setLineDash([]);
 
     ctx.stroke();
     ctx.setLineDash([]);
 
+    // ===== 원 번호 그리기 =====
     ctx.fillStyle = m.color;
     ctx.font = "bold 16px sans-serif";
-    ctx.fillText(m.no, m.x - 6, m.y + 6);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(m.no, m.x, m.y);
+
+    // ===== 박스 텍스트 그리기 =====
+    const box = document.querySelectorAll(".mark")[i];
+    if(!box) return;
+
+    const input = box.querySelector("input").value;
+    if(!input) return;
+
+    // ===== 글자 크기 계산 =====
+    const fontSize = parseInt(fontSizeInput.value);
+    ctx.font = `${fontSize*sy}px sans-serif`;
+
+    // 텍스트 크기에 따라 박스 크기 계산
+    const textMetrics = ctx.measureText(input);
+    const textWidth = textMetrics.width + 16*sy; // 좌우 여백
+    const textHeight = fontSize*sy + 8*sy;      // 상하 여백
+
+    const boxX = m.x - textWidth / 2;
+    const boxY = m.y + m.r + 6;
+    const boxW = textWidth;
+    const boxH = textHeight;
+
+    // 박스 배경
+    ctx.fillStyle = "#ffffff";
+    ctx.strokeStyle = "#aaaaaa";
+    ctx.lineWidth = 2 * sx;
+    ctx.fillRect(boxX, boxY, boxW, boxH);
+    ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+    // 박스 텍스트
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#000";
+    ctx.fillText(input, boxX + boxW / 2, boxY + boxH / 2);
+
+    // 정렬 초기화
+    ctx.textAlign = "left";
+    ctx.textBaseline = "alphabetic";
   });
 }
 
-/* 슬라이더 */
+/* === 슬라이더 이벤트 등록 === */
 radiusInput.addEventListener("input", ()=>{
   if(selectedIndex === null) return;
   marks[selectedIndex].r = parseInt(radiusInput.value);
@@ -256,84 +309,19 @@ lineInput.addEventListener("input", ()=>{
   redraw();
 });
 
-/* 저장 */
-function saveImage(){
-  const out = document.createElement("canvas");
-  out.width = img.naturalWidth;
-  out.height = img.naturalHeight;
-  const octx = out.getContext("2d");
+fontSizeInput.addEventListener("input", ()=>{
+  if(selectedIndex === null) return;
+  redraw();  // 글자 크기는 marks 배열에서 참조하므로 바로 redraw 호출
+});
 
-  octx.drawImage(img, 0, 0, out.width, out.height);
-
-  const sx = out.width / canvas.width;
-  const sy = out.height / canvas.height;
-
-  marks.forEach(m=>{
-    octx.beginPath();
-    octx.arc(m.x*sx, m.y*sy, m.r*sx, 0, Math.PI*2);
-    octx.strokeStyle = m.color;
-    octx.lineWidth = m.line * sx;
-    octx.stroke();
-
-    octx.fillStyle = m.color;
-    octx.font = "bold 32px sans-serif";
-    octx.fillText(m.no, m.x*sx - 10, m.y*sy + 10);
-  });
-
-  marks.forEach((m,i)=>{
-    const box = document.querySelectorAll(".mark")[i];
-    if(!box) return;
-
-    const input = box.querySelector("input").value;
-    if(!input) return;
-
-    // === 박스 위치 (화면 → 원본 비율 변환) ===
-    const boxX = (m.x - 80) * sx;
-    const boxY = (m.y + m.r + 6) * sy;
-    const boxW = 160 * sx;
-    const boxH = 44 * sy;
-
-    // ① 박스 배경
-    octx.fillStyle = "#ffffff";
-    octx.strokeStyle = "#aaaaaa";
-    octx.lineWidth = 2 * sx;
-    octx.fillRect(boxX, boxY, boxW, boxH);
-    octx.strokeRect(boxX, boxY, boxW, boxH);
-
-    // 공통 정렬 설정
-    octx.textAlign = "center";
-    octx.textBaseline = "middle";
-
-    // ② 제목 (상단 중앙)
-    octx.fillStyle = "#000";
-    octx.font = `${14*sy}px sans-serif`;
-    octx.fillText(
-      `증거 ${i+1}`,
-      boxX + boxW / 2,
-      boxY + boxH * 0.35
-    );
-
-    // ③ 내용 (하단 중앙)
-    octx.font = `${13*sy}px sans-serif`;
-    octx.fillText(
-      input,
-      boxX + boxW / 2,
-      boxY + boxH * 0.75
-    );
-
-    // 정렬 초기화 (다른 그림 영향 방지)
-    octx.textAlign = "left";
-    octx.textBaseline = "alphabetic";
-
-    });
-
-
-
-  const a=document.createElement("a");
-  a.href = out.toDataURL("image/jpeg",0.95);
+/* ===== 증거사진 저장 함수 ===== */
+function saveImage() {
+  const a = document.createElement("a");
+  a.href = canvas.toDataURL("image/jpeg", 0.95);
   a.download = "증거사진.jpg";
   a.click();
 }
+  
 </script>
 
 </body>
