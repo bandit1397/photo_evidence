@@ -20,6 +20,13 @@ canvas{position:absolute;left:0;top:0}
 }
 .mark b{display:block;margin-bottom:2px}
 .mark input{width:100%;border:none;outline:none}
+  
+.mark input {
+  position: absolute;
+  left: -9999px; /* 화면 밖으로 이동 */
+  top: -9999px;
+}
+  
 button{padding:4px 8px;font-size:13px}
 </style>
 </head>
@@ -96,6 +103,15 @@ function hitTest(x, y, m){
 /* ===== START (선택 or 새 원 준비) ===== */
 canvas.addEventListener("mousedown", startAction);
 canvas.addEventListener("touchstart", startAction);
+
+canvas.addEventListener("dblclick", (e)=>{
+    if(selectedIndex === null) return;
+    const text = prompt("박스에 넣을 텍스트를 입력하세요:", marks[selectedIndex].text || "");
+    if(text !== null){
+        marks[selectedIndex].text = text;
+        redraw();
+    }
+});
 
 function startAction(e){
   e.preventDefault();
@@ -269,9 +285,9 @@ fontSizeInput.addEventListener("input", ()=>{
 
   
 /* 다시 그리기 */
-function redraw(){
+function redraw() {
   // 1. 캔버스 초기화
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   // 2. 원본 이미지 그리기
   ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -279,14 +295,14 @@ function redraw(){
   const sx = canvas.width / img.clientWidth;
   const sy = canvas.height / img.clientHeight;
 
- marks.forEach((m,i)=>{
+  marks.forEach((m, i) => {
     // ===== 원 그리기 =====
     ctx.beginPath();
-    ctx.arc(m.x, m.y, m.r, 0, Math.PI*2);
+    ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2);
     ctx.strokeStyle = m.color;
-    ctx.lineWidth = m.line * sx; 
+    ctx.lineWidth = m.line * sx;
 
-    if(i === selectedIndex) ctx.setLineDash([6,4]);
+    if (i === selectedIndex) ctx.setLineDash([6, 4]);
     else ctx.setLineDash([]);
 
     ctx.stroke();
@@ -299,21 +315,21 @@ function redraw(){
     ctx.textBaseline = "middle";
     ctx.fillText(m.no, m.x, m.y);
 
-    // ===== 박스 텍스트 그리기 =====
+    // ===== 박스 텍스트 그리기 (캔버스 전용) =====
     const box = document.querySelectorAll(".mark")[i];
-    if(!box) return;
+    if (!box) return;
 
     const input = box.querySelector("input").value;
-    if(!input) return;
+    if (!input) return;
 
-    // ===== 글자 크기 계산 =====
+    // 글자 크기 계산
     const fontSize = parseInt(fontSizeInput.value);
-    ctx.font = `${fontSize*sy}px sans-serif`;
+    ctx.font = `${fontSize * sy}px sans-serif`;
 
     // 텍스트 크기에 따라 박스 크기 계산
     const textMetrics = ctx.measureText(input);
-    const textWidth = textMetrics.width + 16*sy; // 좌우 여백
-    const textHeight = fontSize*sy + 8*sy;      // 상하 여백
+    const textWidth = textMetrics.width + 16 * sy; // 좌우 여백
+    const textHeight = fontSize * sy + 8 * sy;     // 상하 여백
 
     const boxX = m.x - textWidth / 2;
     const boxY = m.y + m.r + 6;
@@ -333,11 +349,15 @@ function redraw(){
     ctx.fillStyle = "#000";
     ctx.fillText(input, boxX + boxW / 2, boxY + boxH / 2);
 
+    // HTML 박스는 화면에서 숨기기 (입력용)
+    box.style.display = "none";
+
     // 정렬 초기화
     ctx.textAlign = "left";
     ctx.textBaseline = "alphabetic";
   });
 }
+
 
 /* === 슬라이더 이벤트 등록 === */
 radiusInput.addEventListener("input", ()=>{
