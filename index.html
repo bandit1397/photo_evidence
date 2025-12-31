@@ -280,15 +280,18 @@ function saveImage(){
     octx.fillText(m.no, m.x*sx - 10, m.y*sy + 10);
   });
 
-  document.querySelectorAll(".mark").forEach((box,i)=>{
-    const text = box.querySelector("input").value;
-    if(!text) return;
-    const x = (parseFloat(box.style.left) + 4) * sx;
-    const y = (parseFloat(box.style.top) + 16) * sy;
-    octx.fillStyle="#000";
-    octx.font="24px sans-serif";
-    octx.fillText(`증거 ${i+1}: ${text}`, x, y);
+  marks.forEach((m,i)=>{
+    const input = document.querySelectorAll(".mark input")[i].value;
+    if(!input) return;
+
+    const textX = (m.x + m.r + 10) * sx;   // 원 오른쪽
+    const textY = (m.y + 8) * sy;
+
+    octx.fillStyle = "#000";
+    octx.font = "24px sans-serif";
+    octx.fillText(`증거 ${i+1}: ${input}`, textX, textY);
   });
+
 
   const a=document.createElement("a");
   a.href = out.toDataURL("image/jpeg",0.95);
