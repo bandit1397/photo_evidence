@@ -40,6 +40,7 @@ button{padding:4px 8px;font-size:13px}
   <input type="range" id="line" min="2" max="12" value="4">
   
   <button onclick="saveImage()">증거사진 저장</button>
+  <button onclick="deleteSelected()">선택 원 삭제</button>
 </header>
 
 <div id="container">
@@ -136,6 +137,32 @@ canvas.addEventListener("touchend", e=>{
   evidenceNo++;
   redraw();
 });
+
+// 🔴 바로 여기 ⭐⭐⭐
+function deleteSelected(){
+  if(selectedIndex === null){
+    alert("삭제할 증거를 먼저 선택하세요.");
+    return;
+  }
+
+  // 설명 박스 제거
+  const boxes = document.querySelectorAll(".mark");
+  if(boxes[selectedIndex]){
+    boxes[selectedIndex].remove();
+  }
+
+  // 데이터 제거
+  marks.splice(selectedIndex, 1);
+
+  // 🔧 번호 재정렬 (핵심)
+  marks.forEach((m, i) => {
+    m.no = i + 1;
+  });
+  evidenceNo = marks.length + 1;
+
+  selectedIndex = null;
+  redraw();
+}
 
 
 function redraw(){
