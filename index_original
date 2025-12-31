@@ -50,6 +50,15 @@ button{padding:4px 8px;font-size:13px}
   문자크기
   <input type="range" id="fontSize" min="8" max="80" value="13">
 
+  텍스트 색상
+  <select id="textColor">
+    <option value="black">검정</option>
+    <option value="blue">파랑</option>
+    <option value="red">빨강</option>
+    <option value="green">초록</option>
+  </select>
+
+
   <button onclick="saveImage()">증거사진 저장</button>
   <button onclick="deleteSelected()">선택 원 삭제</button>
 </header>
@@ -68,7 +77,9 @@ const container = document.getElementById("container");
 const colorSel = document.getElementById("color");
 const radiusInput = document.getElementById("radius");
 const lineInput = document.getElementById("line");
-const fontSizeInput = document.getElementById("fontSize"); // 여기
+const fontSizeInput = document.getElementById("fontSize"); 
+const textColorInput = document.getElementById("textColor");
+
 
 /* 상태 변수 */
 const marks = [];
@@ -346,7 +357,7 @@ function redraw() {
     // 박스 텍스트
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillStyle = "#000";
+    ctx.fillStyle = textColorInput.value;  // 선택된 색상 적용
     ctx.fillText(input, boxX + boxW / 2, boxY + boxH / 2);
 
     // HTML 박스는 화면에서 숨기기 (입력용)
@@ -375,6 +386,13 @@ lineInput.addEventListener("input", ()=>{
 fontSizeInput.addEventListener("input", ()=>{
   if(selectedIndex === null) return;
   redraw();  // 글자 크기는 marks 배열에서 참조하므로 바로 redraw 호출
+});
+
+// 🔹 텍스트 색상 변경 이벤트
+textColorInput.addEventListener("change", ()=>{
+  if(selectedIndex !== null){
+    redraw();
+  }
 });
 
 /* ===== 증거사진 저장 함수 ===== */
