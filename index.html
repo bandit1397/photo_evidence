@@ -281,16 +281,35 @@ function saveImage(){
   });
 
   marks.forEach((m,i)=>{
-    const input = document.querySelectorAll(".mark input")[i].value;
+    const box = document.querySelectorAll(".mark")[i];
+    if(!box) return;
+
+    const input = box.querySelector("input").value;
     if(!input) return;
 
-    const textX = (m.x + m.r + 10) * sx;   // 원 오른쪽
-    const textY = (m.y + 8) * sy;
+    // === 박스 위치 (화면 → 원본 비율 변환) ===
+    const boxX = (m.x - 80) * sx;
+    const boxY = (m.y + m.r + 6) * sy;
+    const boxW = 160 * sx;
+    const boxH = 44 * sy;
 
+    // ① 박스 배경
+    octx.fillStyle = "#ffffff";
+    octx.strokeStyle = "#aaaaaa";
+    octx.lineWidth = 2 * sx;
+    octx.fillRect(boxX, boxY, boxW, boxH);
+    octx.strokeRect(boxX, boxY, boxW, boxH);
+
+    // ② 제목
     octx.fillStyle = "#000";
-    octx.font = "24px sans-serif";
-    octx.fillText(`증거 ${i+1}: ${input}`, textX, textY);
+    octx.font = `${14*sy}px sans-serif`;
+    octx.fillText(`증거 ${i+1}`, boxX + 6*sx, boxY + 16*sy);
+
+    // ③ 내용
+    octx.font = `${13*sy}px sans-serif`;
+    octx.fillText(input, boxX + 6*sx, boxY + 34*sy);
   });
+
 
 
   const a=document.createElement("a");
