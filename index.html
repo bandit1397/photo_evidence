@@ -119,7 +119,8 @@ canvas.addEventListener("touchstart", startAction);
 // PC용 더블클릭
 canvas.addEventListener("dblclick", handleTextInput);
 
-let lastTap = 0; // 모바일 탭 시간 체크
+// 모바일용 더블탭 감지
+let lastTap = 0;
 
 canvas.addEventListener("touchend", (e) => {
   e.preventDefault();
@@ -133,7 +134,10 @@ canvas.addEventListener("touchend", (e) => {
 
       // 300ms 이하의 짧은 탭이면 텍스트 입력
       if (tapLength < 300) {
-        handleTextInput();
+        // setTimeout으로 prompt 호출
+        setTimeout(() => {
+          handleTextInput();
+        }, 0);
       }
 
       lastTap = currentTime;
