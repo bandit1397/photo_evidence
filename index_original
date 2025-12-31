@@ -160,6 +160,10 @@ function deleteSelected(){
   });
   evidenceNo = marks.length + 1;
 
+  document.querySelectorAll(".mark b").forEach((b,i)=>{
+    b.textContent = `증거 ${i+1}`;
+  });
+
   selectedIndex = null;
   redraw();
 }
@@ -167,17 +171,28 @@ function deleteSelected(){
 
 function redraw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  marks.forEach(m=>{
+
+  marks.forEach((m,i)=>{
     ctx.beginPath();
     ctx.arc(m.x,m.y,m.r,0,Math.PI*2);
     ctx.strokeStyle=m.color;
     ctx.lineWidth=m.line;
+
+    if(i === selectedIndex){
+      ctx.setLineDash([6,4]);
+    }else{
+      ctx.setLineDash([]);
+    }
+
     ctx.stroke();
+    ctx.setLineDash([]);
+
     ctx.fillStyle=m.color;
     ctx.font="bold 16px sans-serif";
     ctx.fillText(m.no,m.x-6,m.y+6);
   });
 }
+
 
 // ④ 캔버스 클릭/드래그 등 기존 이벤트들
 //canvas.addEventListener("mousedown", ...);
