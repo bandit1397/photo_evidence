@@ -225,6 +225,49 @@ function deleteSelected(){
   redraw();
 }
 
+
+/* ===== 박스 크기 조정 함수 ===== */
+function updateBoxSize(i){
+  const box = document.querySelectorAll(".mark")[i];
+  if(!box) return;
+
+  const input = box.querySelector("input");
+  if(!input) return;
+
+  // 글자 크기
+  const fontSize = parseInt(fontSizeInput.value);
+
+  // 박스 크기 계산
+  ctx.font = `${fontSize}px sans-serif`;
+  const textMetrics = ctx.measureText(input.value);
+  const textWidth = textMetrics.width + 16; // 좌우 여백
+  const textHeight = fontSize + 8;          // 상하 여백
+
+  // 박스 크기 및 글꼴 크기 적용
+  box.style.width = textWidth + "px";
+  box.style.height = textHeight + "px";
+  box.style.top = (marks[i].y + marks[i].r + 6) + "px";
+  box.style.left = (marks[i].x - textWidth / 2) + "px";
+  input.style.fontSize = fontSize + "px";   // ✅ 입력창 글자 크기 변경
+}
+
+
+document.querySelectorAll(".mark input").forEach((input, i)=>{
+  input.addEventListener("input", ()=>{
+    updateBoxSize(i);
+    redraw();
+  });
+});
+
+fontSizeInput.addEventListener("input", ()=>{
+  if(selectedIndex !== null){
+    updateBoxSize(selectedIndex);
+    redraw();
+  }
+});
+
+
+  
 /* 다시 그리기 */
 function redraw(){
   // 1. 캔버스 초기화
