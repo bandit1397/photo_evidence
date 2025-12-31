@@ -40,6 +40,7 @@ button{padding:4px 8px;font-size:13px}
   <input type="range" id="line" min="2" max="12" value="4">
   
   <button onclick="saveImage()">증거사진 저장</button>
+  <button onclick="deleteSelected()">선택 원 삭제</button>
 </header>
 
 <div id="container">
@@ -137,20 +138,61 @@ canvas.addEventListener("touchend", e=>{
   redraw();
 });
 
+// 🔴 바로 여기 ⭐⭐⭐
+function deleteSelected(){
+  if(selectedIndex === null){
+    alert("삭제할 증거를 먼저 선택하세요.");
+    return;
+  }
+
+  // 설명 박스 제거
+  const boxes = document.querySelectorAll(".mark");
+  if(boxes[selectedIndex]){
+    boxes[selectedIndex].remove();
+  }
+
+  // 데이터 제거
+  marks.splice(selectedIndex, 1);
+
+  // 🔧 번호 재정렬 (핵심)
+  marks.forEach((m, i) => {
+    m.no = i + 1;
+  });
+  evidenceNo = marks.length + 1;
+
+  document.querySelectorAll(".mark b").forEach((b,i)=>{
+    b.textContent = `증거 ${i+1}`;
+  });
+
+  selectedIndex = null;
+  redraw();
+}
+
 
 function redraw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  marks.forEach(m=>{
+
+  marks.forEach((m,i)=>{
     ctx.beginPath();
     ctx.arc(m.x,m.y,m.r,0,Math.PI*2);
     ctx.strokeStyle=m.color;
     ctx.lineWidth=m.line;
+
+    if(i === selectedIndex){
+      ctx.setLineDash([6,4]);
+    }else{
+      ctx.setLineDash([]);
+    }
+
     ctx.stroke();
+    ctx.setLineDash([]);
+
     ctx.fillStyle=m.color;
     ctx.font="bold 16px sans-serif";
     ctx.fillText(m.no,m.x-6,m.y+6);
   });
 }
+
 
 // ④ 캔버스 클릭/드래그 등 기존 이벤트들
 //canvas.addEventListener("mousedown", ...);
