@@ -289,7 +289,8 @@ function redraw(){
     // 정렬 초기화
     ctx.textAlign = "left";
     ctx.textBaseline = "alphabetic";
-});
+  });
+}
 
 /* === 슬라이더 이벤트 등록 === */
 radiusInput.addEventListener("input", ()=>{
@@ -308,14 +309,14 @@ fontSizeInput.addEventListener("input", ()=>{
   if(selectedIndex === null) return;
   redraw();  // 글자 크기는 marks 배열에서 참조하므로 바로 redraw 호출
 });
-}
-function saveImage() {
-    const a = document.createElement("a");
-    a.href = canvas.toDataURL("image/jpeg", 0.95);
-    a.download = "증거사진.jpg";
-    a.click();
-  }
 
+/* ===== 증거사진 저장 함수 ===== */
+function saveImage() {
+  const a = document.createElement("a");
+  a.href = canvas.toDataURL("image/jpeg", 0.95);
+  a.download = "증거사진.jpg";
+  a.click();
+}
   
 </script>
 
