@@ -40,6 +40,9 @@ button{padding:4px 8px;font-size:13px}
   선굵기
   <input type="range" id="line" min="2" max="12" value="4">
 
+  문자크기
+  <input type="range" id="fontSize" min="8" max="40" value="13">
+
   <button onclick="saveImage()">증거사진 저장</button>
   <button onclick="deleteSelected()">선택 원 삭제</button>
 </header>
@@ -58,6 +61,7 @@ const container = document.getElementById("container");
 const colorSel = document.getElementById("color");
 const radiusInput = document.getElementById("radius");
 const lineInput = document.getElementById("line");
+const fontSizeInput = document.getElementById("fontSize"); // 여기
 
 /* 상태 변수 */
 const marks = [];
@@ -287,7 +291,7 @@ function saveImage(){
     const input = box.querySelector("input").value;
     if(!input) return;
 
-    // === 박스 위치 (화면 → 원본 비율 변환) ===
+    // === 박스 위치 계산 ===
     const boxX = (m.x - 80) * sx;
     const boxY = (m.y + m.r + 6) * sy;
     const boxW = 160 * sx;
@@ -300,24 +304,28 @@ function saveImage(){
     octx.fillRect(boxX, boxY, boxW, boxH);
     octx.strokeRect(boxX, boxY, boxW, boxH);
 
-    // 공통 정렬 설정
+    // 공통 정렬
     octx.textAlign = "center";
     octx.textBaseline = "middle";
 
-    // 내용만 중앙에
+    // ② 내용 그리기
     octx.fillStyle = "#000";
-    octx.font = `${13*sy}px sans-serif`;
+
+    // 사용자가 지정한 크기 가져오기
+    const fontSize = parseInt(fontSizeInput.value);
+    octx.font = `${fontSize*sy}px sans-serif`;
+
     octx.fillText(
       input,
       boxX + boxW / 2,
       boxY + boxH / 2
     );
 
-    // 정렬 초기화 (다른 그림 영향 방지)
+    // 정렬 초기화
     octx.textAlign = "left";
     octx.textBaseline = "alphabetic";
+});
 
-    });
 
 
 
