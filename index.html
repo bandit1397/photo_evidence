@@ -8,9 +8,57 @@
 <style>
 body{margin:0;font-family:system-ui;background:#f2f2f2}
 header{
-  background:#111;color:#fff;padding:8px;
-  display:flex;gap:6px;align-items:center;flex-wrap:wrap
+  background:#111;
+  color:#fff;
+  padding:8px;
+  display:grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap:8px;
 }
+
+/* 파일 선택 */
+header input[type="file"]{
+  grid-column: span 2;
+  color:#fff;
+}
+
+/* 셀렉트, 버튼 공통 */
+header select,
+header button{
+  width:100%;
+  height:36px;
+  font-size:14px;
+}
+
+/* 슬라이더 그룹 */
+header label{
+  grid-column: span 2;
+  font-size:12px;
+}
+
+header input[type="range"]{
+  grid-column: span 2;
+  width:100%;
+}
+
+/* PC에서는 한 줄 정렬 */
+@media (min-width: 768px){
+  header{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+
+  header input[type="range"]{
+    width:120px;
+  }
+
+  header select,
+  header button{
+    width:auto;
+  }
+}
+
 #container{position:relative;width:100%}
 #photo{width:100%;display:block}
 canvas{position:absolute;left:0;top:0}
@@ -41,13 +89,13 @@ button{padding:4px 8px;font-size:13px}
     <option value="green">🟢 Green</option>
   </select>
 
-  원크기
+  <label for="radius">원크기</label>
   <input type="range" id="radius" min="15" max="200" value="80">
 
-  선굵기
+  <label for="line">선굵기</label>
   <input type="range" id="line" min="2" max="12" value="4">
 
-  문자크기
+  <label for="fontSize">문자크기</label>
   <input type="range" id="fontSize" min="8" max="80" value="13">
 
   텍스트 색상
