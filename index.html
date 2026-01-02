@@ -207,6 +207,14 @@ const lineInput = document.getElementById("line");
 const fontSizeInput = document.getElementById("fontSize"); 
 const textColorInput = document.getElementById("textColor");
 
+let imgDraw = {
+  x: 0,
+  y: 0,
+  w: 0,
+  h: 0,
+  scale: 1
+};
+
 
 /* 상태 변수 */
 const marks = [];
@@ -383,17 +391,31 @@ document.getElementById("file").addEventListener("change", e=>{
   img.src = URL.createObjectURL(f);
 });
 
-img.onload = ()=>{
-  const rect = img.getBoundingClientRect();
+img.onload = () => {
+  const containerW = container.clientWidth;
 
-  canvas.width  = rect.width;
-  canvas.height = rect.height;
+  // 이미지 원본 비율
+  const imgRatio = img.naturalWidth / img.naturalHeight;
 
-  canvas.style.width  = rect.width + "px";
-  canvas.style.height = rect.height + "px";
+  // 캔버스 크기 결정 (가로 기준)
+  const drawW = containerW;
+  const drawH = drawW / imgRatio;
+
+  canvas.width  = drawW;
+  canvas.height = drawH;
+
+  canvas.style.width  = drawW + "px";
+  canvas.style.height = drawH + "px";
+
+  imgDraw.x = 0;
+  imgDraw.y = 0;
+  imgDraw.w = drawW;
+  imgDraw.h = drawH;
+  imgDraw.scale = drawW / img.naturalWidth;
 
   redraw();
 };
+
 
 
 /* 삭제 */
@@ -466,10 +488,17 @@ function redraw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   // 2. 원본 이미지 그리기
-  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  ctx.drawImage(
+    img,
+    imgDraw.x,
+    imgDraw.y,
+    imgDraw.w,
+    imgDraw.h
+  );
 
-  const sx = canvas.width / img.clientWidth;
-  const sy = canvas.height / img.clientHeight;
+  const sx = imgDraw.scale;
+  const sy = imgDraw.scale;
+
 
   marks.forEach((m, i) => {
     // ===== 원 그리기 =====
