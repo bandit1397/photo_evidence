@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>현장 사진 증거표시</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui;
+      background: #f2f2f2
+    }
+
+    header {
+      background: #111;
+      color: #fff;
+      padding: 8px;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap
+    }
+
+    #container {
+      position: relative;
+      width: 100%
+    }
+
+    #photo {
+      width: 100%;
+      display: block
+    }
+
+    canvas {
+      position: absolute;
+      left: 0;
+      top: 0
+    }
+
+    .mark {
+      position: absolute;
+      background: #fff;
+      border: 1px solid #aaa;
+      border-radius: 6px;
+      padding: 4px;
+      font-size: 13px;
+      width: 160px
+    }
+
+    .mark b {
+      display: block;
+      margin-bottom: 2px
+    }
+
+    .mark input {
+      width: 100%;
+      border: none;
+      outline: none
+    }
+
+    .mark input {
+      position: absolute;
+      left: -9999px;
+      top: -9999px
+    }
+
+    button {
+      padding: 4px 8px;
+      font-size: 13px
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <input type="file" id="file" accept="image/*">
+
+  <select id="color">
+    <option value="red">🔴 Red</option>
+    <option value="blue">🔵 Blue</option>
+    <option value="green">🟢 Green</option>
+  </select>
+
+  원크기
+  <input type="range" id="radius" min="15" max="200" value="80">
+
+  선굵기
+  <input type="range" id="line" min="2" max="12" value="4">
+
+  문자크기
+  <input type="range" id="fontSize" min="8" max="80" value="13">
+
+  텍스트 색상
+  <select id="textColor">
+    <option value="black">검정</option>
+    <option value="blue">파랑</option>
+    <option value="red">빨강</option>
+    <option value="green">초록</option>
+  </select>
+
+  <button onclick="saveImage()">증거사진 저장</button>
+  <button onclick="deleteSelected()">선택 원 삭제</button>
+</header>
+
+<div id="container">
+  <img id="photo">
+  <canvas id="overlay"></canvas>
+</div>
+
+<script>
+  const img = document.getElementById("photo");
+  const canvas = document.getElementById("overlay");
+  const ctx = canvas.getContext("2d");
+  const container = document.getElementById("container");
+
+  const colorSel = document.getElementById("color");
+  const radiusInput = document.getElementById("radius");
+  const lineInput = document.getElementById("line");
+  const fontSizeInput = document.getElementById("fontSize");
+  const textColorInput = document.getElementById("textColor");
+
+  radiusInput.addEventListener("input", () => {
+    if (selectedIndex === null) return;
+    marks[selectedIndex].r = parseInt(radiusInput.value);
+    redraw();
+  });
+
+  lineInput.addEventListener("input", () => {
+    if (selectedIndex === null) return;
+    marks[selectedIndex].line = parseInt(lineInput.value);
+    redraw();
+  });
+
+  fontSizeInput.addEventListener("input", () => {
+    if (selectedIndex === null) return;
+
+    const size = parseInt(fontSizeInput.value);
+    marks[selectedIndex].fontSize = size;
+
+    const box = document.querySelectorAll(".mark")[selectedIndex];
+    if (box) box.style.fontSize = size + "px";
+
+    redraw();
+  });
+
+
+
+  const marks = [];
+  let selectedIndex = null;
+  let evidenceNo = 1;
+  let startX = 0, startY = 0;
+  let drawing = false;
+  let dragging = false;
+  let dragOffsetX = 0;
+  let dragOffsetY = 0;
+
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+      x: clientX - rect.left,
+      y: clientY - rect.top
+    };
+  }
+
+  function hitTest(x, y, m) {
+    const dx = x - m.x;
+    const dy = y - m.y;
+    return Math.sqrt(dx * dx + dy * dy) <= m.r;
+  }
+
+  canvas.addEventListener("mousedown", startAction);
+  canvas.addEventListener("touchstart", startAction);
+  canvas.addEventListener("dblclick", handleTextInput);
+
+  let lastTap = 0;
+  canvas.addEventListener("touchstart", (e) => {
+    const { x, y } = getPos(e);
+    const currentTime = new Date().getTime();
+    const tapLength = currentTime - lastTap;
+
+    for (let i = marks.length - 1; i >= 0; i--) {
+      if (hitTest(x, y, marks[i])) {
+        selectedIndex = i;
+        if (tapLength < 300) {
+          handleTextInput();
+        }
+        lastTap = currentTime;
+        return;
+      }
+    }
+  });
+
+  function handleTextInput() {
+    if (selectedIndex === null) return;
+
+    const text = prompt(
+      "박스에 넣을 텍스트를 입력하세요:",
+      marks[selectedIndex].text || ""
+    );
+
+    if (text === null) return;
+
+    // ✅ 1. canvas용 데이터 저장
+    marks[selectedIndex].text = text;
+    marks[selectedIndex].textColor = textColorInput.value;
+
+    // 👉 실제 박스에 표시
+    const box = document.querySelectorAll(".mark")[selectedIndex];
+    if (box) {
+      box.querySelector(".text").innerText = text;
+      box.style.color = textColorInput.value;
+      box.style.display = "none"; // ✅ 이 줄 추가
+     }
+
+    // ✅ 3. canvas 다시 그리기 (저장 대비)
+    redraw();
+  }
+
+  function startAction(e) {
+    e.preventDefault();
+    const { x, y } = getPos(e);
+
+    selectedIndex = null;
+    dragging = false;
+    drawing = false;
+
+    for (let i = marks.length - 1; i >= 0; i--) {
+      if (hitTest(x, y, marks[i])) {
+        selectedIndex = i;
+        dragging = true;
+        dragOffsetX = x - marks[i].x;
+        dragOffsetY = y - marks[i].y;
+        radiusInput.value = marks[i].r;
+        lineInput.value = marks[i].line;
+        fontSizeInput.value = marks[i].fontSize || 13; // ✅ 추가
+        redraw();
+        return;
+      }
+    }
+
+    startX = x;
+    startY = y;
+    drawing = true;
+  }
+
+  canvas.addEventListener("mousemove", moveAction);
+  canvas.addEventListener("touchmove", moveAction);
+
+  function moveAction(e) {
+    if (!dragging || selectedIndex === null) return;
+    e.preventDefault();
+
+    const { x, y } = getPos(e);
+    const m = marks[selectedIndex];
+
+    m.x = x - dragOffsetX;
+    m.y = y - dragOffsetY;
+
+    redraw();
+  }
+
+  canvas.addEventListener("mouseup", endAction);
+  canvas.addEventListener("touchend", endAction);
+
+  function endAction() {
+    if (dragging) {
+      dragging = false;
+      return;
+    }
+    if (!drawing) return;
+
+    drawing = false;
+    const r = parseInt(radiusInput.value);
+    const lw = parseInt(lineInput.value);
+
+    marks.push({
+      x: startX,
+      y: startY,
+      r,
+      line: lw,
+      color: colorSel.value,
+      no: evidenceNo,
+      fontSize: parseInt(fontSizeInput.value)
+    });
+
+    const box = document.createElement("div");
+    box.className = "mark";
+    box.style.left = (startX - 80) + "px";
+    box.style.top = (startY + r + 6) + "px";
+    box.style.fontSize = (fontSizeInput.value || 13) + "px"; // ← 여기
+    box.innerHTML = '<div class="text"></div>';
+
+    container.appendChild(box);
+    evidenceNo++;
+    redraw();
+  }
+
+  document.getElementById("file").addEventListener("change", e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    img.src = URL.createObjectURL(f);
+  });
+
+  img.onload = () => {
+    canvas.width = img.clientWidth;
+    canvas.height = img.clientHeight;
+  };
+
+  function deleteSelected() {
+    if (selectedIndex === null) {
+      alert("삭제할 증거를 먼저 선택하세요.");
+      return;
+    }
+    document.querySelectorAll(".mark")[selectedIndex]?.remove();
+    marks.splice(selectedIndex, 1);
+    marks.forEach((m, i) => m.no = i + 1);
+    evidenceNo = marks.length + 1;
+    selectedIndex = null;
+    redraw();
+  }
+
+  function redraw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    const sx = canvas.width / img.clientWidth;
+    const sy = canvas.height / img.clientHeight;
+
+    marks.forEach((m) => {
+      /* ===== 원 ===== */
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2);
+      ctx.strokeStyle = m.color;
+      ctx.lineWidth = m.line * sx;
+      ctx.stroke();
+
+      /* ===== 원 아래 텍스트 박스 ===== */
+      if (m.text) {
+        const fontSize = m.fontSize || 13;
+        ctx.font = `${fontSize}px sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        const paddingX = 10;
+        const paddingY = 6;
+
+        const textWidth = ctx.measureText(m.text).width;
+        const boxW = textWidth + paddingX * 2;
+        const boxH = fontSize + paddingY * 2;
+
+        const boxX = m.x - boxW / 2;
+        const boxY = m.y + m.r + 8;
+
+        // 박스 배경
+        ctx.fillStyle = "#ffffff";
+        ctx.strokeStyle = "#aaa";
+        ctx.lineWidth = 1;
+        ctx.fillRect(boxX, boxY, boxW, boxH);
+        ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+        // 텍스트
+        ctx.fillStyle = m.textColor || "black";
+        ctx.fillText(m.text, m.x, boxY + boxH / 2);
+      }
+    });
+  }
+
+  function saveImage() {
+    const a = document.createElement("a");
+    a.href = canvas.toDataURL("image/jpeg", 0.95);
+    a.download = "증거사진.jpg";
+    a.click();
+  }
+</script>
+</body>
+</html>
