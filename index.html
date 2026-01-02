@@ -75,20 +75,23 @@
 
 <body>
   
-<header>
-  <!-- 1줄 : 파일 선택 -->
+<header class="header">
+
+  <!-- 1줄: 파일 선택 -->
   <div class="header-row">
     <input type="file" id="file" accept="image/*">
   </div>
 
-  <!-- 2줄 : 원 색상 / 텍스트 색상 -->
+  <!-- 2줄: 색상 -->
   <div class="header-row">
+    원 색상
     <select id="color">
       <option value="red">🔴 Red</option>
       <option value="blue">🔵 Blue</option>
       <option value="green">🟢 Green</option>
     </select>
 
+    텍스트 색상
     <select id="textColor">
       <option value="black">검정</option>
       <option value="blue">파랑</option>
@@ -97,26 +100,26 @@
     </select>
   </div>
 
-  <!-- 3줄 : 원크기 / 선굵기 / 문자크기 -->
+  <!-- 3줄: 크기 조절 -->
   <div class="header-row">
     원크기
-    <input type="number" id="radius" min="15" max="200" value="80" step="1">
+    <input type="number" id="radius" min="15" max="200" value="80">
 
     선굵기
-    <input type="number" id="line" min="2" max="12" value="4" step="1">
+    <input type="number" id="line" min="2" max="12" value="4">
 
     문자크기
-    <input type="number" id="fontSize" min="8" max="80" value="13" step="1">
-
+    <input type="number" id="fontSize" min="8" max="80" value="13">
   </div>
 
-  <!-- 4줄 : 저장 / 삭제 -->
+  <!-- 4줄: 버튼 -->
   <div class="header-row">
     <button onclick="saveImage()">증거사진 저장</button>
     <button onclick="deleteSelected()">선택 원 삭제</button>
   </div>
 
 </header>
+
 
 
 <div id="container">
