@@ -145,29 +145,32 @@
 
   canvas.addEventListener("dblclick", handleTextInput);
 
-  let lastTap = 0; // 모바일 더블탭/단일탭 감지용
+  // 모바일용 더블탭 감지
+let lastTap = 0;
 
-  canvas.addEventListener("touchend", (e) => {
-    e.preventDefault();
+canvas.addEventListener("touchend", (e) => {
+  e.preventDefault();
+  const currentTime = new Date().getTime();
+  const tapLength = currentTime - lastTap;
 
-    const currentTime = new Date().getTime();
-    const tapLength = currentTime - lastTap;
+  const { x, y } = getPos(e);
+  for (let i = marks.length - 1; i >= 0; i--) {
+    if (hitTest(x, y, marks[i])) {
+      selectedIndex = i;
 
-    const { x, y } = getPos(e);
-    for (let i = marks.length - 1; i >= 0; i--) {
-      if (hitTest(x, y, marks[i])) {
-        selectedIndex = i;
-
-        // 300ms 이하의 탭이면 텍스트 입력
-        if (tapLength < 300) {
+      // 300ms 이하의 짧은 탭이면 텍스트 입력
+      if (tapLength < 300) {
+        // setTimeout으로 prompt 호출
+        setTimeout(() => {
           handleTextInput();
-        }
-
-        lastTap = currentTime;
-        return;
+        }, 0);
       }
+
+      lastTap = currentTime;
+      return;
     }
-  });
+  }
+});
 
 
   function handleTextInput(){
