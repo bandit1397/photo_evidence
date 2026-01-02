@@ -123,8 +123,19 @@ header input[type="range"]{
   }
 }
 
-#container{position:relative;width:100%}
-#photo{width:100%;display:block}
+#container{
+  position:relative;
+  width:100%;
+  max-width:100vw;
+  overflow:hidden;
+}
+
+#photo{
+  width:100%;
+  height:auto;          /* ⭐ 비율 유지 */
+  display:block;
+  object-fit:contain;   /* ⭐ 화면 안에 맞춤 */
+}
 canvas{position:absolute;left:0;top:0}
 .mark{
   position:absolute;background:#fff;border:1px solid #aaa;
@@ -373,9 +384,17 @@ document.getElementById("file").addEventListener("change", e=>{
 });
 
 img.onload = ()=>{
-  canvas.width = img.clientWidth;
-  canvas.height = img.clientHeight;
+  const rect = img.getBoundingClientRect();
+
+  canvas.width  = rect.width;
+  canvas.height = rect.height;
+
+  canvas.style.width  = rect.width + "px";
+  canvas.style.height = rect.height + "px";
+
+  redraw();
 };
+
 
 /* 삭제 */
 function deleteSelected(){
