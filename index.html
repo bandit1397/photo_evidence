@@ -12,9 +12,8 @@
     body{
       margin:0;
       font-family:system-ui;
-      background:#f2f2f2;
+      background:#f2f2f2
     }
-
     header{
       background:#111;
       color:#fff;
@@ -22,25 +21,21 @@
       display:flex;
       gap:6px;
       align-items:center;
-      flex-wrap:wrap;
+      flex-wrap:wrap
     }
-
     #container{
       position:relative;
-      width:100%;
+      width:100%
     }
-
     #photo{
       width:100%;
-      display:block;
+      display:block
     }
-
     canvas{
       position:absolute;
       left:0;
-      top:0;
+      top:0
     }
-
     .mark{
       position:absolute;
       background:#fff;
@@ -48,26 +43,25 @@
       border-radius:6px;
       padding:4px;
       font-size:13px;
-      width:160px;
+      width:160px
     }
-
     .mark b{
       display:block;
-      margin-bottom:2px;
+      margin-bottom:2px
     }
-
     .mark input{
       width:100%;
       border:none;
-      outline:none;
+      outline:none
+    }
+    .mark input{
       position:absolute;
       left:-9999px;
-      top:-9999px;
+      top:-9999px
     }
-
     button{
       padding:4px 8px;
-      font-size:13px;
+      font-size:13px
     }
   </style>
 </head>
@@ -121,59 +115,60 @@
   const fontSizeInput = document.getElementById("fontSize");
   const textColorInput = document.getElementById("textColor");
 
-  /* 상태 변수 */
   const marks = [];
   let selectedIndex = null;
   let evidenceNo = 1;
-  let startX = 0;
-  let startY = 0;
+  let startX = 0, startY = 0;
   let drawing = false;
   let dragging = false;
   let dragOffsetX = 0;
   let dragOffsetY = 0;
 
-  /* 좌표 계산 */
   function getPos(e){
     const rect = canvas.getBoundingClientRect();
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
     return {
       x: clientX - rect.left,
       y: clientY - rect.top
     };
   }
 
-  /* 원 히트 테스트 */
   function hitTest(x, y, m){
     const dx = x - m.x;
     const dy = y - m.y;
     return Math.sqrt(dx*dx + dy*dy) <= m.r;
   }
 
-  /* ===== START ===== */
   canvas.addEventListener("mousedown", startAction);
   canvas.addEventListener("touchstart", startAction);
 
   canvas.addEventListener("dblclick", handleTextInput);
 
-  let lastTap = 0;
-  canvas.addEventListener("touchstart", (e)=>{
-    const { x, y } = getPos(e);
+  let lastTap = 0; // 모바일 더블탭/단일탭 감지용
+
+  canvas.addEventListener("touchend", (e) => {
+    e.preventDefault();
+
     const currentTime = new Date().getTime();
     const tapLength = currentTime - lastTap;
 
-    for(let i = marks.length - 1; i >= 0; i--){
-      if(hitTest(x, y, marks[i])){
+    const { x, y } = getPos(e);
+    for (let i = marks.length - 1; i >= 0; i--) {
+      if (hitTest(x, y, marks[i])) {
         selectedIndex = i;
-        if(tapLength < 300){
+
+        // 300ms 이하의 탭이면 텍스트 입력
+        if (tapLength < 300) {
           handleTextInput();
         }
+
         lastTap = currentTime;
         return;
       }
     }
   });
+
 
   function handleTextInput(){
     if(selectedIndex === null) return;
@@ -203,7 +198,6 @@
         dragOffsetY = y - marks[i].y;
         radiusInput.value = marks[i].r;
         lineInput.value = marks[i].line;
-        fontSizeInput.value = marks[i].fontSize || 16;
         redraw();
         return;
       }
@@ -214,7 +208,6 @@
     drawing = true;
   }
 
-  /* ===== MOVE ===== */
   canvas.addEventListener("mousemove", moveAction);
   canvas.addEventListener("touchmove", moveAction);
 
@@ -228,10 +221,18 @@
     m.x = x - dragOffsetX;
     m.y = y - dragOffsetY;
 
+    const box = document.querySelectorAll(".mark")[selectedIndex];
+    if(box){
+      const fontSize = parseInt(fontSizeInput.value);
+      const textMetrics = ctx.measureText(box.querySelector("input").value);
+      const textWidth = textMetrics.width + 16;
+      box.style.width = textWidth + "px";
+      box.style.top = (marks[selectedIndex].y + marks[selectedIndex].r + 6) + "px";
+    }
+
     redraw();
   }
 
-  /* ===== END ===== */
   canvas.addEventListener("mouseup", endAction);
   canvas.addEventListener("touchend", endAction);
 
@@ -253,7 +254,6 @@
       r,
       line: lw,
       color: colorSel.value,
-      fontSize: parseInt(fontSizeInput.value),
       no: evidenceNo
     });
 
@@ -271,7 +271,6 @@
     redraw();
   }
 
-  /* 이미지 로드 */
   document.getElementById("file").addEventListener("change", e=>{
     const f = e.target.files[0];
     if(!f) return;
@@ -283,7 +282,6 @@
     canvas.height = img.clientHeight;
   };
 
-  /* 삭제 */
   function deleteSelected(){
     if(selectedIndex === null){
       alert("삭제할 증거를 먼저 선택하세요.");
@@ -293,59 +291,42 @@
     document.querySelectorAll(".mark")[selectedIndex]?.remove();
     marks.splice(selectedIndex, 1);
 
-    marks.forEach((m, i)=> m.no = i + 1);
+    marks.forEach((m,i)=>m.no=i+1);
     evidenceNo = marks.length + 1;
+
+    document.querySelectorAll(".mark b").forEach((b,i)=>{
+      b.textContent = `증거 ${i+1}`;
+    });
 
     selectedIndex = null;
     redraw();
   }
 
-  /* 다시 그리기 */
   function redraw(){
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(img,0,0,canvas.width,canvas.height);
 
-    marks.forEach((m, i)=>{
+    marks.forEach((m,i)=>{
       ctx.beginPath();
-      ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2);
+      ctx.arc(m.x,m.y,m.r,0,Math.PI*2);
       ctx.strokeStyle = m.color;
       ctx.lineWidth = m.line;
       ctx.stroke();
 
       ctx.fillStyle = m.color;
-      ctx.font = `bold ${m.fontSize || 16}px sans-serif`;
+      ctx.font = "bold 16px sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText(m.no, m.x, m.y);
+      ctx.fillText(m.no,m.x,m.y);
     });
   }
 
   function saveImage(){
     const a = document.createElement("a");
-    a.href = canvas.toDataURL("image/jpeg", 0.95);
+    a.href = canvas.toDataURL("image/jpeg",0.95);
     a.download = "증거사진.jpg";
     a.click();
   }
-  /* ===== 선택된 원 실시간 반영 ===== */
-
-radiusInput.addEventListener("input", ()=>{
-  if(selectedIndex === null) return;
-  marks[selectedIndex].r = parseInt(radiusInput.value);
-  redraw();
-});
-
-lineInput.addEventListener("input", ()=>{
-  if(selectedIndex === null) return;
-  marks[selectedIndex].line = parseInt(lineInput.value);
-  redraw();
-});
-
-fontSizeInput.addEventListener("input", ()=>{
-  if(selectedIndex === null) return;
-  marks[selectedIndex].fontSize = parseInt(fontSizeInput.value);
-  redraw();
-});
-
 </script>
 
 </body>
