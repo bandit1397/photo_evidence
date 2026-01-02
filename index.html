@@ -7,135 +7,12 @@
 
 <style>
 body{margin:0;font-family:system-ui;background:#f2f2f2}
-
-/* ✅ 여기에 넣으세요 (toolbar 관련 CSS) */
-header.toolbar{
-  background:#111;
-  color:#fff;
-  padding:8px;
-  display:grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap:8px;
-}
-
-/* 파일 선택 : 한 줄 전체 */
-header.toolbar input[type="file"]{
-  grid-column: span 2;
-  color:#fff;
-}
-
-/* 셀렉트 */
-header.toolbar select{
-  height:36px;
-  font-size:14px;
-  width:100%;
-}
-
-/* 라벨 */
-header.toolbar label{
-  grid-column: span 2;
-  font-size:12px;
-}
-
-/* 슬라이더 */
-header.toolbar input[type="range"]{
-  grid-column: span 2;
-  width:100%;
-}
-
-/* 버튼 */
-header.toolbar button{
-  height:38px;
-  font-size:14px;
-  width:100%;
-}
-
-/* PC 화면 */
-@media (min-width: 768px){
-  header.toolbar{
-    display:flex;
-    flex-wrap:wrap;
-    align-items:center;
-  }
-
-  header.toolbar label{
-    grid-column:auto;
-  }
-
-  header.toolbar input[type="range"]{
-    width:120px;
-  }
-
-  header.toolbar select,
-  header.toolbar button{
-    width:auto;
-  }
-
 header{
-  background:#111;
-  color:#fff;
-  padding:8px;
-  display:grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap:8px;
+  background:#111;color:#fff;padding:8px;
+  display:flex;gap:6px;align-items:center;flex-wrap:wrap
 }
-
-/* 파일 선택 */
-header input[type="file"]{
-  grid-column: span 2;
-  color:#fff;
-}
-
-/* 셀렉트, 버튼 공통 */
-header select,
-header button{
-  width:100%;
-  height:36px;
-  font-size:14px;
-}
-
-/* 슬라이더 그룹 */
-header label{
-  grid-column: span 2;
-  font-size:12px;
-}
-
-header input[type="range"]{
-  grid-column: span 2;
-  width:100%;
-}
-
-/* PC에서는 한 줄 정렬 */
-@media (min-width: 768px){
-  header{
-    display:flex;
-    flex-wrap:wrap;
-    align-items:center;
-  }
-
-  header input[type="range"]{
-    width:120px;
-  }
-
-  header select,
-  header button{
-    width:auto;
-  }
-}
-
-#container{
-  position:relative;
-  width:100%;
-  max-width:100vw;
-  overflow:hidden;
-}
-
-#photo{
-  width:100%;
-  height:auto;          /* ⭐ 비율 유지 */
-  display:block;
-  object-fit:contain;   /* ⭐ 화면 안에 맞춤 */
-}
+#container{position:relative;width:100%}
+#photo{width:100%;display:block}
 canvas{position:absolute;left:0;top:0}
 .mark{
   position:absolute;background:#fff;border:1px solid #aaa;
@@ -156,39 +33,35 @@ button{padding:4px 8px;font-size:13px}
 
 <body>
 
-<header class="toolbar">
-  <!-- 1줄 -->
+<header>
   <input type="file" id="file" accept="image/*">
-
-  <!-- 2줄 -->
   <select id="color">
-    <option value="red">🔴 원 색상</option>
-    <option value="blue">🔵 원 색상</option>
-    <option value="green">🟢 원 색상</option>
+    <option value="red">🔴 Red</option>
+    <option value="blue">🔵 Blue</option>
+    <option value="green">🟢 Green</option>
   </select>
 
-  <select id="textColor">
-    <option value="black">텍스트 검정</option>
-    <option value="blue">텍스트 파랑</option>
-    <option value="red">텍스트 빨강</option>
-    <option value="green">텍스트 초록</option>
-  </select>
-
-  <!-- 3줄 -->
-  <label for="radius">원크기</label>
+  원크기
   <input type="range" id="radius" min="15" max="200" value="80">
 
-  <label for="line">선굵기</label>
+  선굵기
   <input type="range" id="line" min="2" max="12" value="4">
 
-  <label for="fontSize">문자크기</label>
+  문자크기
   <input type="range" id="fontSize" min="8" max="80" value="13">
 
-  <!-- 4줄 -->
+  텍스트 색상
+  <select id="textColor">
+    <option value="black">검정</option>
+    <option value="blue">파랑</option>
+    <option value="red">빨강</option>
+    <option value="green">초록</option>
+  </select>
+
+
   <button onclick="saveImage()">증거사진 저장</button>
   <button onclick="deleteSelected()">선택 원 삭제</button>
 </header>
-
 
 <div id="container">
   <img id="photo">
@@ -206,14 +79,6 @@ const radiusInput = document.getElementById("radius");
 const lineInput = document.getElementById("line");
 const fontSizeInput = document.getElementById("fontSize"); 
 const textColorInput = document.getElementById("textColor");
-
-let imgDraw = {
-  x: 0,
-  y: 0,
-  w: 0,
-  h: 0,
-  scale: 1
-};
 
 
 /* 상태 변수 */
@@ -391,32 +256,10 @@ document.getElementById("file").addEventListener("change", e=>{
   img.src = URL.createObjectURL(f);
 });
 
-img.onload = () => {
-  const containerW = container.clientWidth;
-
-  // 이미지 원본 비율
-  const imgRatio = img.naturalWidth / img.naturalHeight;
-
-  // 캔버스 크기 결정 (가로 기준)
-  const drawW = containerW;
-  const drawH = drawW / imgRatio;
-
-  canvas.width  = drawW;
-  canvas.height = drawH;
-
-  canvas.style.width  = drawW + "px";
-  canvas.style.height = drawH + "px";
-
-  imgDraw.x = 0;
-  imgDraw.y = 0;
-  imgDraw.w = drawW;
-  imgDraw.h = drawH;
-  imgDraw.scale = drawW / img.naturalWidth;
-
-  redraw();
+img.onload = ()=>{
+  canvas.width = img.clientWidth;
+  canvas.height = img.clientHeight;
 };
-
-
 
 /* 삭제 */
 function deleteSelected(){
@@ -488,17 +331,10 @@ function redraw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   // 2. 원본 이미지 그리기
-  ctx.drawImage(
-    img,
-    imgDraw.x,
-    imgDraw.y,
-    imgDraw.w,
-    imgDraw.h
-  );
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-  const sx = imgDraw.scale;
-  const sy = imgDraw.scale;
-
+  const sx = canvas.width / img.clientWidth;
+  const sy = canvas.height / img.clientHeight;
 
   marks.forEach((m, i) => {
     // ===== 원 그리기 =====
