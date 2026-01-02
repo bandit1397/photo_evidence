@@ -204,17 +204,20 @@
 
     if (text === null) return;
 
-    // 데이터 저장
+    // ✅ 1. canvas용 데이터 저장
     marks[selectedIndex].text = text;
+    marks[selectedIndex].textColor = textColorInput.value;
 
     // 👉 실제 박스에 표시
     const box = document.querySelectorAll(".mark")[selectedIndex];
     if (box) {
       box.querySelector(".text").innerText = text;
       box.style.color = textColorInput.value;
-    }
-  }
+     }
 
+    // ✅ 3. canvas 다시 그리기 (저장 대비)
+    redraw();
+  }
 
   function startAction(e) {
     e.preventDefault();
@@ -326,17 +329,42 @@
     const sx = canvas.width / img.clientWidth;
     const sy = canvas.height / img.clientHeight;
 
-    marks.forEach((m, i) => {
+    marks.forEach((m) => {
+      /* ===== 원 ===== */
       ctx.beginPath();
       ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2);
       ctx.strokeStyle = m.color;
       ctx.lineWidth = m.line * sx;
       ctx.stroke();
 
-      ctx.fillStyle = m.color;
-      ctx.font = `bold ${m.fontSize || 16}px sans-serif`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
+      /* ===== 원 아래 텍스트 박스 ===== */
+      if (m.text) {
+        const fontSize = m.fontSize || 13;
+        ctx.font = `${fontSize}px sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        const paddingX = 10;
+        const paddingY = 6;
+
+        const textWidth = ctx.measureText(m.text).width;
+        const boxW = textWidth + paddingX * 2;
+        const boxH = fontSize + paddingY * 2;
+
+        const boxX = m.x - boxW / 2;
+        const boxY = m.y + m.r + 8;
+
+        // 박스 배경
+        ctx.fillStyle = "#ffffff";
+        ctx.strokeStyle = "#aaa";
+        ctx.lineWidth = 1;
+        ctx.fillRect(boxX, boxY, boxW, boxH);
+        ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+        // 텍스트
+        ctx.fillStyle = m.textColor || "black";
+        ctx.fillText(m.text, m.x, boxY + boxH / 2);
+      }
     });
   }
 
