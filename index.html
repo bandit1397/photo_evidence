@@ -247,13 +247,14 @@
     const lw = parseInt(lineInput.value);
 
     marks.push({
-      x: startX,
-      y: startY,
+      x, y,
       r,
       line: lw,
       color: colorSel.value,
+      fontSize: parseInt(fontSizeInput.value),
       no: evidenceNo
     });
+
 
     selectedIndex = marks.length - 1;
 
