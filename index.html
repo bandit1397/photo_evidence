@@ -213,6 +213,7 @@
     if (box) {
       box.querySelector(".text").innerText = text;
       box.style.color = textColorInput.value;
+      box.style.display = "none"; // ✅ 이 줄 추가
      }
 
     // ✅ 3. canvas 다시 그리기 (저장 대비)
