@@ -324,6 +324,26 @@
     a.download = "증거사진.jpg";
     a.click();
   }
+  /* ===== 선택된 원 실시간 반영 ===== */
+
+radiusInput.addEventListener("input", ()=>{
+  if(selectedIndex === null) return;
+  marks[selectedIndex].r = parseInt(radiusInput.value);
+  redraw();
+});
+
+lineInput.addEventListener("input", ()=>{
+  if(selectedIndex === null) return;
+  marks[selectedIndex].line = parseInt(lineInput.value);
+  redraw();
+});
+
+fontSizeInput.addEventListener("input", ()=>{
+  if(selectedIndex === null) return;
+  marks[selectedIndex].fontSize = parseInt(fontSizeInput.value);
+  redraw();
+});
+
 </script>
 
 </body>
