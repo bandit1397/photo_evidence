@@ -121,6 +121,32 @@
   const fontSizeInput = document.getElementById("fontSize");
   const textColorInput = document.getElementById("textColor");
 
+  radiusInput.addEventListener("input", () => {
+    if (selectedIndex === null) return;
+    marks[selectedIndex].r = parseInt(radiusInput.value);
+    redraw();
+  });
+
+  lineInput.addEventListener("input", () => {
+    if (selectedIndex === null) return;
+    marks[selectedIndex].line = parseInt(lineInput.value);
+    redraw();
+  });
+
+  fontSizeInput.addEventListener("input", () => {
+    if (selectedIndex === null) return;
+
+    const size = parseInt(fontSizeInput.value);
+    marks[selectedIndex].fontSize = size;
+
+    const box = document.querySelectorAll(".mark")[selectedIndex];
+    if (box) box.style.fontSize = size + "px";
+
+    redraw();
+  });
+
+
+
   const marks = [];
   let selectedIndex = null;
   let evidenceNo = 1;
@@ -196,6 +222,7 @@
         dragOffsetY = y - marks[i].y;
         radiusInput.value = marks[i].r;
         lineInput.value = marks[i].line;
+        fontSizeInput.value = marks[i].fontSize || 13; // ✅ 추가
         redraw();
         return;
       }
@@ -243,12 +270,14 @@
       line: lw,
       color: colorSel.value,
       no: evidenceNo
+      fontSize: parseInt(fontSizeInput.value)
     });
 
     const box = document.createElement("div");
     box.className = "mark";
     box.style.left = (startX - 80) + "px";
     box.style.top = (startY + r + 6) + "px";
+    box.style.fontSize = (fontSizeInput.value || 13) + "px"; // ← 여기
     box.innerHTML = '<input placeholder="내용 입력">';
 
     container.appendChild(box);
@@ -295,7 +324,7 @@
       ctx.stroke();
 
       ctx.fillStyle = m.color;
-      ctx.font = "bold 16px sans-serif";
+      ctx.font = `bold ${m.fontSize || 16}px sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(m.no, m.x, m.y);
