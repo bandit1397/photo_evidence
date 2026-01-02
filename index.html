@@ -2,72 +2,78 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, user-scalable=no"
-  >
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>현장 사진 증거표시</title>
 
   <style>
-    body{
-      margin:0;
-      font-family:system-ui;
-      background:#f2f2f2
+    body {
+      margin: 0;
+      font-family: system-ui;
+      background: #f2f2f2
     }
-    header{
-      background:#111;
-      color:#fff;
-      padding:8px;
-      display:flex;
-      gap:6px;
-      align-items:center;
-      flex-wrap:wrap
+
+    header {
+      background: #111;
+      color: #fff;
+      padding: 8px;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap
     }
-    #container{
-      position:relative;
-      width:100%
+
+    #container {
+      position: relative;
+      width: 100%
     }
-    #photo{
-      width:100%;
-      display:block
+
+    #photo {
+      width: 100%;
+      display: block
     }
-    canvas{
-      position:absolute;
-      left:0;
-      top:0
+
+    canvas {
+      position: absolute;
+      left: 0;
+      top: 0
     }
-    .mark{
-      position:absolute;
-      background:#fff;
-      border:1px solid #aaa;
-      border-radius:6px;
-      padding:4px;
-      font-size:13px;
-      width:160px
+
+    .mark {
+      position: absolute;
+      background: #fff;
+      border: 1px solid #aaa;
+      border-radius: 6px;
+      padding: 4px;
+      font-size: 13px;
+      width: 160px
     }
-    .mark b{
-      display:block;
-      margin-bottom:2px
+
+    .mark b {
+      display: block;
+      margin-bottom: 2px
     }
-    .mark input{
-      width:100%;
-      border:none;
-      outline:none
+
+    .mark input {
+      width: 100%;
+      border: none;
+      outline: none
     }
-    .mark input{
-      position:absolute;
-      left:-9999px;
-      top:-9999px
+
+    .mark input {
+      position: absolute;
+      left: -9999px;
+      top: -9999px
     }
-    button{
-      padding:4px 8px;
-      font-size:13px
+
+    button {
+      padding: 4px 8px;
+      font-size: 13px
     }
   </style>
 </head>
 
 <body>
-
 <header>
   <input type="file" id="file" accept="image/*">
 
@@ -124,7 +130,7 @@
   let dragOffsetX = 0;
   let dragOffsetY = 0;
 
-  function getPos(e){
+  function getPos(e) {
     const rect = canvas.getBoundingClientRect();
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
@@ -134,58 +140,47 @@
     };
   }
 
-  function hitTest(x, y, m){
+  function hitTest(x, y, m) {
     const dx = x - m.x;
     const dy = y - m.y;
-    return Math.sqrt(dx*dx + dy*dy) <= m.r;
+    return Math.sqrt(dx * dx + dy * dy) <= m.r;
   }
 
   canvas.addEventListener("mousedown", startAction);
   canvas.addEventListener("touchstart", startAction);
-
   canvas.addEventListener("dblclick", handleTextInput);
 
-  // 모바일용 더블탭 감지
-let lastTap = 0;
+  let lastTap = 0;
+  canvas.addEventListener("touchstart", (e) => {
+    const { x, y } = getPos(e);
+    const currentTime = new Date().getTime();
+    const tapLength = currentTime - lastTap;
 
-canvas.addEventListener("touchend", (e) => {
-  e.preventDefault();
-  const currentTime = new Date().getTime();
-  const tapLength = currentTime - lastTap;
-
-  const { x, y } = getPos(e);
-  for (let i = marks.length - 1; i >= 0; i--) {
-    if (hitTest(x, y, marks[i])) {
-      selectedIndex = i;
-
-      // 300ms 이하의 짧은 탭이면 텍스트 입력
-      if (tapLength < 300) {
-        // setTimeout으로 prompt 호출
-        setTimeout(() => {
+    for (let i = marks.length - 1; i >= 0; i--) {
+      if (hitTest(x, y, marks[i])) {
+        selectedIndex = i;
+        if (tapLength < 300) {
           handleTextInput();
-        }, 0);
+        }
+        lastTap = currentTime;
+        return;
       }
-
-      lastTap = currentTime;
-      return;
     }
-  }
-});
+  });
 
-
-  function handleTextInput(){
-    if(selectedIndex === null) return;
+  function handleTextInput() {
+    if (selectedIndex === null) return;
     const text = prompt(
       "박스에 넣을 텍스트를 입력하세요:",
       marks[selectedIndex].text || ""
     );
-    if(text !== null){
+    if (text !== null) {
       marks[selectedIndex].text = text;
       redraw();
     }
   }
 
-  function startAction(e){
+  function startAction(e) {
     e.preventDefault();
     const { x, y } = getPos(e);
 
@@ -193,8 +188,8 @@ canvas.addEventListener("touchend", (e) => {
     dragging = false;
     drawing = false;
 
-    for(let i = marks.length - 1; i >= 0; i--){
-      if(hitTest(x, y, marks[i])){
+    for (let i = marks.length - 1; i >= 0; i--) {
+      if (hitTest(x, y, marks[i])) {
         selectedIndex = i;
         dragging = true;
         dragOffsetX = x - marks[i].x;
@@ -214,8 +209,8 @@ canvas.addEventListener("touchend", (e) => {
   canvas.addEventListener("mousemove", moveAction);
   canvas.addEventListener("touchmove", moveAction);
 
-  function moveAction(e){
-    if(!dragging || selectedIndex === null) return;
+  function moveAction(e) {
+    if (!dragging || selectedIndex === null) return;
     e.preventDefault();
 
     const { x, y } = getPos(e);
@@ -224,30 +219,20 @@ canvas.addEventListener("touchend", (e) => {
     m.x = x - dragOffsetX;
     m.y = y - dragOffsetY;
 
-    const box = document.querySelectorAll(".mark")[selectedIndex];
-    if(box){
-      const fontSize = parseInt(fontSizeInput.value);
-      const textMetrics = ctx.measureText(box.querySelector("input").value);
-      const textWidth = textMetrics.width + 16;
-      box.style.width = textWidth + "px";
-      box.style.top = (marks[selectedIndex].y + marks[selectedIndex].r + 6) + "px";
-    }
-
     redraw();
   }
 
   canvas.addEventListener("mouseup", endAction);
   canvas.addEventListener("touchend", endAction);
 
-  function endAction(){
-    if(dragging){
+  function endAction() {
+    if (dragging) {
       dragging = false;
       return;
     }
-    if(!drawing) return;
+    if (!drawing) return;
 
     drawing = false;
-
     const r = parseInt(radiusInput.value);
     const lw = parseInt(lineInput.value);
 
@@ -260,77 +245,69 @@ canvas.addEventListener("touchend", (e) => {
       no: evidenceNo
     });
 
-    selectedIndex = marks.length - 1;
-
     const box = document.createElement("div");
     box.className = "mark";
     box.style.left = (startX - 80) + "px";
     box.style.top = (startY + r + 6) + "px";
-    box.innerHTML = `<input placeholder="내용 입력">`;
+    box.innerHTML = <input placeholder="내용 입력">;
 
     container.appendChild(box);
     evidenceNo++;
-
     redraw();
   }
 
-  document.getElementById("file").addEventListener("change", e=>{
+  document.getElementById("file").addEventListener("change", e => {
     const f = e.target.files[0];
-    if(!f) return;
+    if (!f) return;
     img.src = URL.createObjectURL(f);
   });
 
-  img.onload = ()=>{
+  img.onload = () => {
     canvas.width = img.clientWidth;
     canvas.height = img.clientHeight;
   };
 
-  function deleteSelected(){
-    if(selectedIndex === null){
+  function deleteSelected() {
+    if (selectedIndex === null) {
       alert("삭제할 증거를 먼저 선택하세요.");
       return;
     }
-
     document.querySelectorAll(".mark")[selectedIndex]?.remove();
     marks.splice(selectedIndex, 1);
-
-    marks.forEach((m,i)=>m.no=i+1);
+    marks.forEach((m, i) => m.no = i + 1);
     evidenceNo = marks.length + 1;
-
-    document.querySelectorAll(".mark b").forEach((b,i)=>{
-      b.textContent = `증거 ${i+1}`;
-    });
-
     selectedIndex = null;
     redraw();
   }
 
-  function redraw(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.drawImage(img,0,0,canvas.width,canvas.height);
+  function redraw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-    marks.forEach((m,i)=>{
+    const sx = canvas.width / img.clientWidth;
+    const sy = canvas.height / img.clientHeight;
+
+    marks.forEach((m, i) => {
       ctx.beginPath();
-      ctx.arc(m.x,m.y,m.r,0,Math.PI*2);
+      ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2);
       ctx.strokeStyle = m.color;
-      ctx.lineWidth = m.line;
+      ctx.lineWidth = m.line * sx;
       ctx.stroke();
 
       ctx.fillStyle = m.color;
       ctx.font = "bold 16px sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText(m.no,m.x,m.y);
+      ctx.fillText(m.no, m.x, m.y);
     });
   }
 
-  function saveImage(){
+  function saveImage() {
     const a = document.createElement("a");
-    a.href = canvas.toDataURL("image/jpeg",0.95);
+    a.href = canvas.toDataURL("image/jpeg", 0.95);
     a.download = "증거사진.jpg";
     a.click();
   }
 </script>
-
 </body>
 </html>
