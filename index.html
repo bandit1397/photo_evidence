@@ -7,6 +7,70 @@
 
 <style>
 body{margin:0;font-family:system-ui;background:#f2f2f2}
+
+/* ✅ 여기에 넣으세요 (toolbar 관련 CSS) */
+header.toolbar{
+  background:#111;
+  color:#fff;
+  padding:8px;
+  display:grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap:8px;
+}
+
+/* 파일 선택 : 한 줄 전체 */
+header.toolbar input[type="file"]{
+  grid-column: span 2;
+  color:#fff;
+}
+
+/* 셀렉트 */
+header.toolbar select{
+  height:36px;
+  font-size:14px;
+  width:100%;
+}
+
+/* 라벨 */
+header.toolbar label{
+  grid-column: span 2;
+  font-size:12px;
+}
+
+/* 슬라이더 */
+header.toolbar input[type="range"]{
+  grid-column: span 2;
+  width:100%;
+}
+
+/* 버튼 */
+header.toolbar button{
+  height:38px;
+  font-size:14px;
+  width:100%;
+}
+
+/* PC 화면 */
+@media (min-width: 768px){
+  header.toolbar{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+
+  header.toolbar label{
+    grid-column:auto;
+  }
+
+  header.toolbar input[type="range"]{
+    width:120px;
+  }
+
+  header.toolbar select,
+  header.toolbar button{
+    width:auto;
+  }
+
 header{
   background:#111;
   color:#fff;
@@ -81,14 +145,25 @@ button{padding:4px 8px;font-size:13px}
 
 <body>
 
-<header>
+<header class="toolbar">
+  <!-- 1줄 -->
   <input type="file" id="file" accept="image/*">
+
+  <!-- 2줄 -->
   <select id="color">
-    <option value="red">🔴 Red</option>
-    <option value="blue">🔵 Blue</option>
-    <option value="green">🟢 Green</option>
+    <option value="red">🔴 원 색상</option>
+    <option value="blue">🔵 원 색상</option>
+    <option value="green">🟢 원 색상</option>
   </select>
 
+  <select id="textColor">
+    <option value="black">텍스트 검정</option>
+    <option value="blue">텍스트 파랑</option>
+    <option value="red">텍스트 빨강</option>
+    <option value="green">텍스트 초록</option>
+  </select>
+
+  <!-- 3줄 -->
   <label for="radius">원크기</label>
   <input type="range" id="radius" min="15" max="200" value="80">
 
@@ -98,18 +173,11 @@ button{padding:4px 8px;font-size:13px}
   <label for="fontSize">문자크기</label>
   <input type="range" id="fontSize" min="8" max="80" value="13">
 
-  텍스트 색상
-  <select id="textColor">
-    <option value="black">검정</option>
-    <option value="blue">파랑</option>
-    <option value="red">빨강</option>
-    <option value="green">초록</option>
-  </select>
-
-
+  <!-- 4줄 -->
   <button onclick="saveImage()">증거사진 저장</button>
   <button onclick="deleteSelected()">선택 원 삭제</button>
 </header>
+
 
 <div id="container">
   <img id="photo">
