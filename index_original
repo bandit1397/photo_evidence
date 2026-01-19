@@ -74,35 +74,85 @@
 </head>
 
 <body>
-<header>
-  <input type="file" id="file" accept="image/*">
+  
+<header class="header">
 
-  <select id="color">
-    <option value="red">🔴 Red</option>
-    <option value="blue">🔵 Blue</option>
-    <option value="green">🟢 Green</option>
-  </select>
+  <!-- 1줄: 파일 선택 -->
+  <div class="header-row">
+    <input type="file" id="file" accept="image/*">
+  </div>
 
-  원크기
-  <input type="range" id="radius" min="15" max="200" value="80">
+  <!-- 2줄: 색상 -->
+  <div class="header-row">
+    원 색상
+    <select id="color">
+      <option value="red">🔴 Red</option>
+      <option value="blue">🔵 Blue</option>
+      <option value="green">🟢 Green</option>
+    </select>
 
-  선굵기
-  <input type="range" id="line" min="2" max="12" value="4">
+    텍스트 색상
+    <select id="textColor">
+      <option value="black">검정</option>
+      <option value="blue">파랑</option>
+      <option value="red">빨강</option>
+      <option value="green">초록</option>
+    </select>
+  </div>
 
-  문자크기
-  <input type="range" id="fontSize" min="8" max="80" value="13">
+  <!-- 3줄: 크기 조절 (좌우 스크롤 가능) -->
+  <div class="header-row scroll-row">
+    원
+    <input type="range" id="radius" min="15" max="200" value="80">
+    선
+    <input type="range" id="line" min="2" max="12" value="4">
+    문자
+    <input type="range" id="fontSize" min="8" max="80" value="13">
+  </div>
 
-  텍스트 색상
-  <select id="textColor">
-    <option value="black">검정</option>
-    <option value="blue">파랑</option>
-    <option value="red">빨강</option>
-    <option value="green">초록</option>
-  </select>
+  <!-- 4줄: 버튼 -->
+  <div class="header-row">
+    <button onclick="saveImage()">증거사진 저장</button>
+    <button onclick="deleteSelected()">선택 원 삭제</button>
+  </div>
 
-  <button onclick="saveImage()">증거사진 저장</button>
-  <button onclick="deleteSelected()">선택 원 삭제</button>
 </header>
+
+<style>
+.header {
+  background: #111;
+  color: #fff;
+  padding: 6px;
+  font-family: system-ui;
+}
+
+.header-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.scroll-row {
+  overflow-x: auto; /* 좌우 스크롤 */
+  -webkit-overflow-scrolling: touch; /* 모바일 스무스 스크롤 */
+  gap: 12px;
+}
+
+.scroll-row input[type="range"] {
+  min-width: 100px; /* 최소 너비 */
+  flex: 0 0 auto;   /* 화면이 좁아도 줄어들지 않음 */
+}
+
+select, input[type="number"], input[type="range"], button {
+  font-size: 13px;
+  padding: 2px 4px;
+}
+</style>
+
+
+
 
 <div id="container">
   <img id="photo">
